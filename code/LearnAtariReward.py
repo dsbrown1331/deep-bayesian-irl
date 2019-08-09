@@ -7,6 +7,7 @@ import argparse
 
 
 import pickle
+import copy
 import gym
 import time
 import numpy as np
@@ -19,9 +20,9 @@ from baselines.common.trex_utils import preprocess
 
 
 def generate_novice_demos(env, env_name, agent, model_dir):
-    checkpoint_min = 100#50
+    checkpoint_min = 450
     checkpoint_max = 600
-    checkpoint_step = 100#50
+    checkpoint_step = 50
     checkpoints = []
     if env_name == "enduro":
         checkpoint_min = 3100
@@ -136,7 +137,7 @@ class Net(nn.Module):
             x = F.leaky_relu(self.fc1(x))
             #r = torch.tanh(self.fc2(x)) #clip reward?
             r = self.fc2(x)
-            #r = torch.sigmoid(r) #TODO: try without this
+            r = torch.sigmoid(r) #TODO: try without this
             sum_rewards += r
         ##    y = self.scalar(torch.ones(1))
         ##    sum_rewards += y
@@ -151,7 +152,7 @@ class Net(nn.Module):
         cum_r_i = self.cum_return(traj_i)
         cum_r_j = self.cum_return(traj_j)
         #print(abs_r_i + abs_r_j)
-        return torch.cat([cum_r_i, cum_r_j])
+        return cum_r_i, cum_r_j
 
 
 
@@ -183,11 +184,11 @@ def calc_pairwise_ranking_loss(reward_net, demo_pairs, preference_labels):
     #don't need any gradients
     with torch.no_grad():
 
-        loss_criterion = nn.CrossEntropyLoss()
+        #loss_criterion = nn.CrossEntropyLoss()
         cum_log_likelihood = 0.0
         for i in range(len(preference_labels)):
             traj_i, traj_j = demo_pairs[i]
-            labels = np.array([[training_labels[i]]])
+            labels = np.array([[preference_labels[i]]])
             traj_i = np.array(traj_i)
             traj_j = np.array(traj_j)
             traj_i = torch.from_numpy(traj_i).float().to(device)
@@ -195,32 +196,102 @@ def calc_pairwise_ranking_loss(reward_net, demo_pairs, preference_labels):
             labels = torch.from_numpy(labels).to(device)
 
             #just need forward pass and loss calculation
-            outputs = reward_net.forward(traj_i, traj_j)
-            outputs = outputs.unsqueeze(0)
-            #print(outputs)
+            return_i, return_j = reward_net.forward(traj_i, traj_j)
+            #outputs = outputs.unsqueeze(0)
+            #print(return_i, return_j)
             #print(labels)
-            log_likelihood = -loss_criterion(outputs, labels)
+            #log_likelihood = -loss_criterion(outputs, labels)
+            if labels == 0:
+                log_likelihood = torch.log(return_i/(return_i + return_j))
+            else:
+                log_likelihood = torch.log(return_j/(return_i + return_j))
+            #print("ll",log_likelihood)
             cum_log_likelihood += log_likelihood
 
     return cum_log_likelihood
 
 
 def random_search(reward_net, demonstrations, num_trials, stdev = 0.1):
+    '''hill climbing random search'''
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
-    '''try out a bunch of random weights and see what the resulting predicted returns look like'''
 
+    best_likelihood = -np.inf
+    best_reward = copy.deepcopy(reward_net)
     #create the pairwise rankings for loss calculations
     demo_pairs, preference_labels = create_training_data(demonstrations)
     for i in range(num_trials):
         print()
         print("trial", i)
+        reward_net_proposal = copy.deepcopy(best_reward)
         #add random noise to weights
         with torch.no_grad():
-            for param in reward_net.parameters():
+            for param in reward_net_proposal.parameters():
                 param.add_(torch.randn(param.size()).to(device) * stdev)
-        print_traj_returns(reward_net, demonstrations)
-        cum_loss = calc_pairwise_ranking_loss(reward_net, demo_pairs, preference_labels)
-        print("pair-wise ranking loss", cum_loss)
+        #print_traj_returns(reward_net_proposal, demonstrations)
+        cum_loglik = calc_pairwise_ranking_loss(reward_net_proposal, demo_pairs, preference_labels)
+        print("pair-wise ranking loglik", cum_loglik)
+        if cum_loglik > best_likelihood:
+            best_likelihood = cum_loglik
+            best_reward = copy.deepcopy(reward_net_proposal)
+            print("updating best to ", best_likelihood)
+        else:
+            print("rejecting")
+    return best_reward
+
+
+def mcmc_map_search(reward_net, demonstrations, num_steps, step_stdev = 0.1):
+    '''try out a bunch of random weights and see what the resulting predicted returns look like'''
+    device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+    demo_pairs, preference_labels = create_training_data(demonstrations)
+
+    starting_loglik = calc_pairwise_ranking_loss(reward_net, demo_pairs, preference_labels)
+
+    map_loglik = starting_loglik
+    map_reward = copy.deepcopy(reward_net)
+
+    cur_reward = copy.deepcopy(reward_net)
+    cur_loglik = starting_loglik
+
+    for i in range(num_steps):
+        print()
+        print("step", i)
+        #take a proposal step
+        proposal_reward = copy.deepcopy(cur_reward)
+        #add random noise to weights
+        with torch.no_grad():
+            for param in proposal_reward.parameters():
+                param.add_(torch.randn(param.size()).to(device) * step_stdev)
+        #debugging info
+        print_traj_returns(proposal_reward, demonstrations)
+        #calculate prob of proposal
+        prop_loglik = calc_pairwise_ranking_loss(proposal_reward, demo_pairs, preference_labels)
+        print("proposal loglik", prop_loglik.item())
+        print("cur loglik", cur_loglik.item())
+        if prop_loglik > cur_loglik:
+            #accept always
+            print("accept")
+            cur_reward = copy.deepcopy(proposal_reward)
+            cur_loglik = prop_loglik
+
+            #check if this is best so far
+            if prop_loglik > map_loglik:
+                map_loglik = prop_loglik
+                map_reward = copy.deepcopy(proposal_reward)
+                print("updating map to ", prop_loglik)
+        else:
+            #accept with prob exp(prop_loglik - cur_loglik)
+            if np.random.rand() < torch.exp(prop_loglik - cur_loglik).item():
+                print("probabilistic accept")
+                cur_reward = copy.deepcopy(proposal_reward)
+                cur_loglik = prop_loglik
+            else:
+                #reject and stick with cur_reward
+                print("reject")
+                continue
+
+    return map_reward
+
+
 
 if __name__=="__main__":
     parser = argparse.ArgumentParser(description=None)
@@ -254,6 +325,8 @@ if __name__=="__main__":
 
     stochastic = True
 
+    num_steps = 10
+
     env = make_vec_env(env_id, 'atari', 1, seed,
                        wrapper_kwargs={
                            'clip_rewards':False,
@@ -274,8 +347,6 @@ if __name__=="__main__":
     sorted_returns = sorted(learning_returns)
     print(sorted_returns)
 
-    #create the pairwise rankings for loss calculations
-    training_obs, training_labels = create_training_data(demonstrations)
 
     # Now we create a reward network and optimize it using the training data.
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
@@ -283,10 +354,13 @@ if __name__=="__main__":
     reward_net.to(device)
 
     #run random search over weights
-    random_search(reward_net, demonstrations, 10, stdev = 0.1)
-    #save reward network
-    #torch.save(reward_net.state_dict(), args.reward_model_path)
-
+    #best_reward = random_search(reward_net, demonstrations, 40, stdev = 0.01)
+    best_reward = mcmc_map_search(reward_net, demonstrations, num_steps, step_stdev = 0.1)
+    #save best reward network
+    torch.save(best_reward.state_dict(), args.reward_model_path)
+    demo_pairs, preference_labels = create_training_data(demonstrations)
+    print("best reward ll", calc_pairwise_ranking_loss(best_reward, demo_pairs, preference_labels))
+    print_traj_returns(best_reward, demonstrations)
 
 
     #add random
