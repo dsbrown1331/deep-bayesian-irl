@@ -17,4 +17,4 @@ The main file to run is: LearnAtariReward.py
 Here's an example of how to run it.
 
 
-```python LearnAtariReward.py --env_name breakout --reward_model_path ./learned_models/breakout_test.params --models_dir .```
+```python LearnAtariReward.py --env_name breakout --reward_model_path ./learned_models/breakout_test.params --models_dir ~/Code/learning-rewards-of-learners/learner/models/```
