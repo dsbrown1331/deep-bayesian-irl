@@ -20,7 +20,7 @@ from baselines.common.trex_utils import preprocess
 
 
 def generate_novice_demos(env, env_name, agent, model_dir):
-    checkpoint_min = 450
+    checkpoint_min = 50
     checkpoint_max = 600
     checkpoint_step = 50
     checkpoints = []
@@ -94,7 +94,7 @@ def create_training_data(demonstrations):
     num_demos = len(demonstrations)
     for i in range(num_demos):
         for j in range(i+1,num_demos):
-            print(i,j)
+            #print(i,j)
             traj_i = demonstrations[i]
             traj_j = demonstrations[j]
             label = 1
@@ -137,7 +137,7 @@ class Net(nn.Module):
             x = F.leaky_relu(self.fc1(x))
             #r = torch.tanh(self.fc2(x)) #clip reward?
             r = self.fc2(x)
-            r = torch.sigmoid(r) #TODO: try without this
+            #r = torch.sigmoid(r) #TODO: try without this
             sum_rewards += r
         ##    y = self.scalar(torch.ones(1))
         ##    sum_rewards += y
@@ -184,11 +184,11 @@ def calc_pairwise_ranking_loss(reward_net, demo_pairs, preference_labels):
     #don't need any gradients
     with torch.no_grad():
 
-        #loss_criterion = nn.CrossEntropyLoss()
+        loss_criterion = nn.CrossEntropyLoss()
         cum_log_likelihood = 0.0
         for i in range(len(preference_labels)):
             traj_i, traj_j = demo_pairs[i]
-            labels = np.array([[preference_labels[i]]])
+            labels = np.array([preference_labels[i]])
             traj_i = np.array(traj_i)
             traj_j = np.array(traj_j)
             traj_i = torch.from_numpy(traj_i).float().to(device)
@@ -197,17 +197,20 @@ def calc_pairwise_ranking_loss(reward_net, demo_pairs, preference_labels):
 
             #just need forward pass and loss calculation
             return_i, return_j = reward_net.forward(traj_i, traj_j)
-            #outputs = outputs.unsqueeze(0)
             #print(return_i, return_j)
+            #outputs = torch.from_numpy(np.array([return_i.item(), return_j.item()])).float().to(device)
+            outputs = torch.cat([return_i, return_j], dim=1)
+
+            #outputs = outputs.unsqueeze(0)
+            #print(outputs)
             #print(labels)
-            #log_likelihood = -loss_criterion(outputs, labels)
-            if labels == 0:
-                log_likelihood = torch.log(return_i/(return_i + return_j))
-            else:
-                log_likelihood = torch.log(return_j/(return_i + return_j))
+            log_likelihood = -loss_criterion(outputs, labels)
+            #if labels == 0:
+            #    log_likelihood = torch.log(return_i/(return_i + return_j))
+            #else:
+            #    log_likelihood = torch.log(return_j/(return_i + return_j))
             #print("ll",log_likelihood)
             cum_log_likelihood += log_likelihood
-
     return cum_log_likelihood
 
 
@@ -252,6 +255,9 @@ def mcmc_map_search(reward_net, demonstrations, num_steps, step_stdev = 0.1):
     cur_reward = copy.deepcopy(reward_net)
     cur_loglik = starting_loglik
 
+    reject_cnt = 0
+    accept_cnt = 0
+
     for i in range(num_steps):
         print()
         print("step", i)
@@ -270,6 +276,7 @@ def mcmc_map_search(reward_net, demonstrations, num_steps, step_stdev = 0.1):
         if prop_loglik > cur_loglik:
             #accept always
             print("accept")
+            accept_cnt += 1
             cur_reward = copy.deepcopy(proposal_reward)
             cur_loglik = prop_loglik
 
@@ -282,12 +289,16 @@ def mcmc_map_search(reward_net, demonstrations, num_steps, step_stdev = 0.1):
             #accept with prob exp(prop_loglik - cur_loglik)
             if np.random.rand() < torch.exp(prop_loglik - cur_loglik).item():
                 print("probabilistic accept")
+                accept_cnt += 1
                 cur_reward = copy.deepcopy(proposal_reward)
                 cur_loglik = prop_loglik
             else:
                 #reject and stick with cur_reward
                 print("reject")
+                reject_cnt += 1
                 continue
+    print("num rejects", reject_cnt)
+    print("num accepts", accept_cnt)
 
     return map_reward
 
@@ -301,6 +312,7 @@ if __name__=="__main__":
     parser.add_argument('--models_dir', default = ".", help="path to directory that contains checkpoint models for demos are stored")
     parser.add_argument('--num_trajs', default = 0, type=int, help="number of downsampled full trajectories")
     parser.add_argument('--num_snippets', default = 6000, type = int, help = "number of short subtrajectories to sample")
+    parser.add_argument('--num_mcmc_steps', default=500, type = int, help="number of proposals to generate for MCMC")
 
     args = parser.parse_args()
     env_name = args.env_name
@@ -325,7 +337,6 @@ if __name__=="__main__":
 
     stochastic = True
 
-    num_steps = 10
 
     env = make_vec_env(env_id, 'atari', 1, seed,
                        wrapper_kwargs={
@@ -355,7 +366,7 @@ if __name__=="__main__":
 
     #run random search over weights
     #best_reward = random_search(reward_net, demonstrations, 40, stdev = 0.01)
-    best_reward = mcmc_map_search(reward_net, demonstrations, num_steps, step_stdev = 0.1)
+    best_reward = mcmc_map_search(reward_net, demonstrations, args.num_mcmc_steps, step_stdev = 0.05)
     #save best reward network
     torch.save(best_reward.state_dict(), args.reward_model_path)
     demo_pairs, preference_labels = create_training_data(demonstrations)
