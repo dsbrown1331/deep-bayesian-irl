@@ -313,6 +313,7 @@ if __name__=="__main__":
     parser.add_argument('--num_trajs', default = 0, type=int, help="number of downsampled full trajectories")
     parser.add_argument('--num_snippets', default = 6000, type = int, help = "number of short subtrajectories to sample")
     parser.add_argument('--num_mcmc_steps', default=500, type = int, help="number of proposals to generate for MCMC")
+    parser.add_argument('--mcmc_step_size', default = 0.01, type=float, help="proposal step is gaussian with zero mean and mcmc_step_size stdev")
 
     args = parser.parse_args()
     env_name = args.env_name
@@ -366,7 +367,7 @@ if __name__=="__main__":
 
     #run random search over weights
     #best_reward = random_search(reward_net, demonstrations, 40, stdev = 0.01)
-    best_reward = mcmc_map_search(reward_net, demonstrations, args.num_mcmc_steps, step_stdev = 0.05)
+    best_reward = mcmc_map_search(reward_net, demonstrations, args.num_mcmc_steps, step_stdev = args.mcmc_step_size)
     #save best reward network
     torch.save(best_reward.state_dict(), args.reward_model_path)
     demo_pairs, preference_labels = create_training_data(demonstrations)
