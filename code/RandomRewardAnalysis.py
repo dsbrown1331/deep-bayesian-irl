@@ -1,9 +1,8 @@
 import argparse
 # coding: utf-8
-
-# Take length 50 snippets and record the cumulative return for each one. Then determine ground truth labels based on this.
-
-# In[1]:
+#This experiment is to see if random rewards are always decent for Breakout, or if
+#they sometimes give all negative rewards and are not good. I'm hoping and thinking that
+#if I generate a couple random rewards that there should be both positive and negative outputs
 
 
 import pickle
@@ -302,18 +301,25 @@ def mcmc_map_search(reward_net, demonstrations, num_steps, step_stdev = 0.1):
 
     return map_reward
 
-
+def compute_l1(last_layer):
+    linear, bias = list(last_layer.parameters())
+    #print(linear)
+    #print(bias)
+    with torch.no_grad():
+        weights = torch.cat((linear.squeeze(), bias)).cpu().numpy()
+    #print("output", np.sum(np.abs(weights)))
+    return np.sum(np.abs(weights))
 
 if __name__=="__main__":
     parser = argparse.ArgumentParser(description=None)
     parser.add_argument('--env_name', default='', help='Select the environment name to run, i.e. pong')
     parser.add_argument('--reward_model_path', default='', help="name and location for learned model params, e.g. ./learned_models/breakout.params")
-    parser.add_argument('--seed', default=0, help="random seed for experiments")
+    parser.add_argument('--num_seeds', default=0, help="random seed for experiments")
     parser.add_argument('--models_dir', default = ".", help="path to directory that contains checkpoint models for demos are stored")
     parser.add_argument('--num_trajs', default = 0, type=int, help="number of downsampled full trajectories")
     parser.add_argument('--num_snippets', default = 6000, type = int, help = "number of short subtrajectories to sample")
-    parser.add_argument('--num_mcmc_steps', default=2000, type = int, help="number of proposals to generate for MCMC")
-    parser.add_argument('--mcmc_step_size', default = 0.004, type=float, help="proposal step is gaussian with zero mean and mcmc_step_size stdev")
+    parser.add_argument('--pretrained_network', help='path to pretrained network weights to form \phi(s) using all but last layer')
+    parser.add_argument('--mcmc_step_size', default = 0.005, type=float, help="proposal step is gaussian with zero mean and mcmc_step_size stdev")
 
     args = parser.parse_args()
     env_name = args.env_name
@@ -331,15 +337,13 @@ if __name__=="__main__":
     env_type = "atari"
     print(env_type)
     #set seeds
-    seed = int(args.seed)
-    torch.manual_seed(seed)
-    np.random.seed(seed)
-    tf.set_random_seed(seed)
+    demo_seed = 0 #fixed to reduce variability
+
 
     stochastic = True
 
 
-    env = make_vec_env(env_id, 'atari', 1, seed,
+    env = make_vec_env(env_id, 'atari', 1, demo_seed,
                        wrapper_kwargs={
                            'clip_rewards':False,
                            'episode_life':False,
@@ -359,20 +363,39 @@ if __name__=="__main__":
     sorted_returns = sorted(learning_returns)
     print(sorted_returns)
 
+    #random seed for MCMC
+    num_seeds = int(args.num_seeds)
+    for seed in range(num_seeds):
+        print("*"*10)
+        print("Seed", seed)
+        torch.manual_seed(seed)
+        np.random.seed(seed)
+        tf.set_random_seed(seed)
 
-    # Now we create a reward network and optimize it using the training data.
-    device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
-    reward_net = Net()
-    reward_net.to(device)
+        # Now we create a reward network and optimize it using the training data.
+        device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+        reward_net = Net()
+        reward_net.load_state_dict(torch.load(args.pretrained_network))
+        reward_net.fc2 = nn.Linear(reward_net.fc2.in_features, 1)
+        reward_net.to(device)
+        last_layer = reward_net.fc2
+        with torch.no_grad():
+            for param in last_layer.parameters():
+                param.add_(torch.randn(param.size()).to(device) * args.mcmc_step_size)
+        l1_norm = np.array([compute_l1(last_layer)])
+        #normalize the weight vector...
+        with torch.no_grad():
+            for param in last_layer.parameters():
+                param.div_(torch.from_numpy(l1_norm).float().to(device))
 
-    #run random search over weights
-    #best_reward = random_search(reward_net, demonstrations, 40, stdev = 0.01)
-    best_reward = mcmc_map_search(reward_net, demonstrations, args.num_mcmc_steps, step_stdev = args.mcmc_step_size)
-    #save best reward network
-    torch.save(best_reward.state_dict(), args.reward_model_path)
-    demo_pairs, preference_labels = create_training_data(demonstrations)
-    print("best reward ll", calc_pairwise_ranking_loss(best_reward, demo_pairs, preference_labels))
-    print_traj_returns(best_reward, demonstrations)
+        #run random search over weights
+        #best_reward = random_search(reward_net, demonstrations, 40, stdev = 0.01)
+        best_reward = reward_net#mcmc_map_search(reward_net, demonstrations, args.num_mcmc_steps, step_stdev = args.mcmc_step_size)
+        #save best reward network
+        #torch.save(best_reward.state_dict(), args.reward_model_path)
+        demo_pairs, preference_labels = create_training_data(demonstrations)
+        print("best reward ll", calc_pairwise_ranking_loss(best_reward, demo_pairs, preference_labels))
+        print_traj_returns(best_reward, demonstrations)
 
 
     #add random

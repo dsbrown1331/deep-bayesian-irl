@@ -17,4 +17,4 @@ This will run mcmc over the network weights for Atari.
 Here's an example of how to run it:
 
 
-```python LearnAtariReward.py --env_name breakout --reward_model_path ./learned_models/breakout_test.params --models_dir ~/Code/learning-rewards-of-learners/learner/models/ --num_mcmc_steps 40```
+```python LinearFeatureMCMC.py --env_name breakout --reward_model_path ./learned_models/breakout_test.params --models_dir ~/Code/learning-rewards-of-learners/learner/models/ --num_mcmc_steps 5 --pretrained_network ../pretrained_networks/trex_icml/breakout_progress_masking.params```
