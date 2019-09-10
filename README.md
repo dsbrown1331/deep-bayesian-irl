@@ -18,3 +18,8 @@ Here's an example of how to run it:
 
 
 ```python LinearFeatureMCMC.py --env_name breakout --reward_model_path ./learned_models/breakout_test.params --models_dir ~/Code/learning-rewards-of-learners/learner/models/ --num_mcmc_steps 5 --pretrained_network ../pretrained_networks/trex_icml/breakout_progress_masking.params```
+
+
+To run RL with the mean reward from MCMC you just run
+
+```OPENAI_LOG_FORMAT='stdout,log,csv,tensorboard' OPENAI_LOGDIR=/home/tflogs/breakout python -m baselines.run --alg=ppo2 --env=BreakoutNoFrameskip-v4 --custom_reward mcmc_mean --custom_reward_path ~/Code/deep-bayesian-irl/pretrained_networks/trex_icml/breakout_progress_masking.params --mcmc_chain_path ~/Code/deep-bayesian-irl/mcmc_data/breakout_0.txt --seed 0 --num_timesteps=5e7  --save_interval=500 --num_env 9     ```
