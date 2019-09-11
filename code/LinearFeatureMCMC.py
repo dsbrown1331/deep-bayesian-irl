@@ -4,7 +4,7 @@ import argparse
 # Take as input a compressed pretrained network or run T_REX before hand
 # Then run MCMC and save posterior chain
 
-
+import sys
 import pickle
 import copy
 import gym
@@ -15,6 +15,7 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 from run_test import *
+from nnet import Net
 from baselines.common.trex_utils import preprocess
 
 def generate_debug_demos(env, env_name, agent, model_dir):
@@ -173,70 +174,6 @@ def create_mcmc_likelihood_data(demonstrations):
 
 
 
-class Net(nn.Module):
-    def __init__(self):
-        super().__init__()
-
-        self.conv1 = nn.Conv2d(4, 16, 7, stride=3)
-        self.conv2 = nn.Conv2d(16, 16, 5, stride=2)
-        self.conv3 = nn.Conv2d(16, 16, 3, stride=1)
-        self.conv4 = nn.Conv2d(16, 16, 3, stride=1)
-        self.fc1 = nn.Linear(784, 64)
-        self.fc2 = nn.Linear(64, 1)
-
-
-
-    def cum_return(self, traj):
-        '''calculate cumulative return of trajectory'''
-        sum_rewards = 0
-        sum_abs_rewards = 0
-        for x in traj:
-            x = x.permute(0,3,1,2) #get into NCHW format
-            #compute forward pass of reward network
-            x = F.leaky_relu(self.conv1(x))
-            x = F.leaky_relu(self.conv2(x))
-            x = F.leaky_relu(self.conv3(x))
-            x = F.leaky_relu(self.conv4(x))
-            x = x.view(-1, 784)
-            #x = x.view(-1, 1936)
-            x = F.leaky_relu(self.fc1(x))
-            #r = torch.tanh(self.fc2(x)) #clip reward?
-            r = self.fc2(x)
-            #r = torch.sigmoid(r) #TODO: try without this
-            sum_rewards += r
-        ##    y = self.scalar(torch.ones(1))
-        ##    sum_rewards += y
-        #print(sum_rewards)
-        return sum_rewards
-
-
-    def state_features(self, traj):
-
-        with torch.no_grad():
-            accum = torch.zeros(1,64).float().to(device)
-            for x in traj:
-                x = x.permute(0,3,1,2) #get into NCHW format
-                #compute forward pass of reward network
-                x = F.leaky_relu(self.conv1(x))
-                x = F.leaky_relu(self.conv2(x))
-                x = F.leaky_relu(self.conv3(x))
-                x = F.leaky_relu(self.conv4(x))
-                x = x.view(-1, 784)
-                #x = x.view(-1, 1936)
-                x = F.leaky_relu(self.fc1(x))
-                #print(x.size())
-                accum.add_(x)
-                #print(accum)
-        return accum
-
-
-    def forward(self, traj_i, traj_j):
-        '''compute cumulative return for each trajectory and return logits'''
-        #print([self.cum_return(traj_i), self.cum_return(traj_j)])
-        cum_r_i = self.cum_return(traj_i)
-        cum_r_j = self.cum_return(traj_j)
-        #print(abs_r_i + abs_r_j)
-        return cum_r_i, cum_r_j
 
 
 
@@ -400,7 +337,7 @@ def compute_l1(last_layer):
     #print("output", np.sum(np.abs(weights)))
     return np.sum(np.abs(weights))
 
-def mcmc_map_search(reward_net, demonstrations, pairwise_prefs, demo_cnts, num_steps, step_stdev, weight_output_filename):
+def mcmc_map_search(reward_net, demonstrations, pairwise_prefs, demo_cnts, num_steps, step_stdev, weight_output_filename, weight_init):
     '''run metropolis hastings MCMC and record weights in chain'''
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
     demo_pairs, preference_labels = create_mcmc_likelihood_data(demonstrations)
@@ -408,14 +345,50 @@ def mcmc_map_search(reward_net, demonstrations, pairwise_prefs, demo_cnts, num_s
     writer = open(weight_output_filename,'w')
 
     last_layer = reward_net.fc2
-    with torch.no_grad():
-        for param in last_layer.parameters():
-            param.add_(torch.randn(param.size()).to(device) * step_stdev)
+
+    if weight_init == "randn":
+        with torch.no_grad():
+            for param in last_layer.parameters():
+                param.add_(torch.randn(param.size()).to(device) * step_stdev)
+    elif ":" in weight_init:
+        print(weight_init.strip().split(':'))
+        weight_index, init_weight = weight_init.strip().split(':')
+        init_weight = float(init_weight)
+        weight_index = int(weight_index)
+        print("weight index", weight_index, "init weight", init_weight)
+        #initialize with one hot in weight_init position (i.e. initialize in one of the corners of the unit 1-norm sphere)
+        with torch.no_grad():
+            #get size of weight vector
+            num_weights = reward_net.fc2.in_features  #not including the bias weight
+            #set up initial weights
+            new_linear = torch.zeros(num_weights)
+            new_bias = torch.zeros(1)
+            if weight_index < num_weights:
+                new_linear[weight_index] = init_weight
+            else:
+                new_bias[0] = init_weight
+            #unsqueeze since nn.Linear wants a 2-d tensor for weights
+            new_linear = new_linear.unsqueeze(0)
+            print("new linear", new_linear)
+            print("new bias", new_bias)
+            with torch.no_grad():
+                #print(last_layer.weight)
+                #print(last_layer.bias)
+                #print(last_layer.weight.data)
+                #print(last_layer.bias.data)
+                last_layer.weight.data = new_linear.to(device)
+                last_layer.bias.data = new_bias.to(device)
+    else:
+        print("not a valid weight initialization for MCMC")
+        sys.exit()
+
+    #normalize the weight vector to have unit 1-norm...why not unit 2-norm, WCFB won't work without expert...I guess we could do D-REX and estimate
     l1_norm = np.array([compute_l1(last_layer)])
-    #normalize the weight vector...
+
     with torch.no_grad():
         for param in last_layer.parameters():
             param.div_(torch.from_numpy(l1_norm).float().to(device))
+
     if args.debug:
         print("normalized last layer", compute_l1(last_layer))
         print("weights", get_weight_vector(last_layer))
@@ -523,6 +496,7 @@ if __name__=="__main__":
     parser.add_argument('--pretrained_network', help='path to pretrained network weights to form \phi(s) using all but last layer')
     parser.add_argument('--weight_outputfile', help='filename including path to write the chain to')
     parser.add_argument('--debug', help='use fewer demos to speed things up while debugging', action='store_true' )
+    parser.add_argument('--weight_init', help="defaults to randn, specify integer value to start in a corner of L1-sphere", default="randn")
 
     args = parser.parse_args()
     env_name = args.env_name
@@ -604,7 +578,7 @@ if __name__=="__main__":
 
     #run random search over weights
     #best_reward = random_search(reward_net, demonstrations, 40, stdev = 0.01)
-    best_reward_lastlayer = mcmc_map_search(reward_net, demonstrations, pairwise_prefs, demo_cnts, args.num_mcmc_steps, args.mcmc_step_size, args.weight_outputfile)
+    best_reward_lastlayer = mcmc_map_search(reward_net, demonstrations, pairwise_prefs, demo_cnts, args.num_mcmc_steps, args.mcmc_step_size, args.weight_outputfile, args.weight_init)
     #turn this into a full network
     best_reward = Net()
     best_reward.load_state_dict(torch.load(args.pretrained_network))
