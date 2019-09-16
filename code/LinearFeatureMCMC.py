@@ -496,6 +496,7 @@ if __name__=="__main__":
     parser.add_argument('--pretrained_network', help='path to pretrained network weights to form \phi(s) using all but last layer')
     parser.add_argument('--weight_outputfile', help='filename including path to write the chain to')
     parser.add_argument('--debug', help='use fewer demos to speed things up while debugging', action='store_true' )
+    parser.add_argument('--plot', help='plot out the feature counts over time for demos', action='store_true' )
     parser.add_argument('--weight_init', help="defaults to randn, specify integer value to start in a corner of L1-sphere", default="randn")
 
     args = parser.parse_args()
@@ -568,7 +569,26 @@ if __name__=="__main__":
     #get num_demos by num_features + 1 (bias) numpy array with (un-discounted) feature counts from pretrained network
     demo_cnts = generate_feature_counts(demonstrations, reward_net)
     print(demo_cnts)
-    #print(demo_cnts.shape)
+    if args.plot:
+        plotable_cnts = demo_cnts.cpu().numpy()
+        import matplotlib.pyplot as plt
+        for f in range(num_features+1):
+            #plt.figure(f)
+            if plotable_cnts[0,f] < plotable_cnts[-1,f]: #increasing
+                plt.figure(0)
+                plt.plot(plotable_cnts[:,f], label='feature ' + str(f))
+                plt.legend()
+            elif plotable_cnts[0,f] > plotable_cnts[-1,f]: #decreasing
+                plt.figure(1)
+                plt.plot(plotable_cnts[:,f], label='feature ' + str(f))
+                plt.legend()
+            else: #unknown
+                plt.figure(2)
+                plt.plot(plotable_cnts[:,f], label='feature ' + str(f))
+                plt.legend()
+
+        plt.show()
+        #print(demo_cnts.shape)
 
     #just need index tuples (i,j) denoting j is preferred to i. Assuming all pairwise prefs for now
     pairwise_prefs = []
