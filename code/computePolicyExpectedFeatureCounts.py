@@ -98,7 +98,7 @@ if __name__=="__main__":
     parser = argparse.ArgumentParser(description=None)
     parser.add_argument('--seed', default=1234, help="random seed for experiments")
     parser.add_argument('--env_name', default='', help='Select the environment name to run, i.e. pong')
-    parser.add_argument('--checkpointpath', default='', help='path to checkpoint to run eval on')
+    #parser.add_argument('--checkpointpath', default='', help='path to checkpoint to run eval on')
     #parser.add_argument('--pretrained_network', help='path to pretrained network weights to form \phi(s) using all but last layer')
     parser.add_argument('--num_rollouts', type=int, help='number of rollouts to compute feature counts')
     #parser.add_argument('--output_id', default='', help='unique id for output file name')
@@ -118,13 +118,16 @@ if __name__=="__main__":
 
         device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
         feature_net = nnet.Net()
-        if output_id is 'mean' or output_id is 'map':
-            feature_net.load_state_dict(torch.load('/scratch/cluster/dsbrown/tflogs/mcmc/' + env_name + '_linear_' + output_id + '_0/checkpoints/43000'))
+        if env_name is 'enduro':
+            feature_net.load_state_dict(torch.load('/scratch/cluster/dsbrown/pretrained_networks/trex_icml/' + env_name + '_trajs_masking.params'))
         else:
-            feature_net.load_state_dict(torch.load('/scratch/cluster/dsbrown/models/' + env_name + '_25/' + output_ids))
+            feature_net.load_state_dict(torch.load('/scratch/cluster/dsbrown/pretrained_networks/trex_icml/' + env_name + '_progress_masking.params'))
         feature_net.to(device)
 
-        checkpointpath = args.checkpointpath
+        if output_id is 'mean' or output_id is 'map':
+            checkpointpath = '/scratch/cluster/dsbrown/tflogs/mcmc/' + env_name + '_linear_' + output_id + '_0/checkpoints/43000'
+        else:
+            checkpointpath = '/scratch/cluster/dsbrown/models/' + env_name + '_25/' + output_id
         print("*"*10)
         print(env_name)
         print("*"*10)
