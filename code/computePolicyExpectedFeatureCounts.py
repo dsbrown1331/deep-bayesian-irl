@@ -100,6 +100,7 @@ if __name__=="__main__":
     parser = argparse.ArgumentParser(description=None)
     parser.add_argument('--seed', default=1234, help="random seed for experiments")
     parser.add_argument('--env_name', default='', help='Select the environment name to run, i.e. pong')
+    parser.add_argument('--output_id', help="either map or mean or number of checkpoint")
     #parser.add_argument('--checkpointpath', default='', help='path to checkpoint to run eval on')
     #parser.add_argument('--pretrained_network', help='path to pretrained network weights to form \phi(s) using all but last layer')
     parser.add_argument('--num_rollouts', type=int, help='number of rollouts to compute feature counts')
@@ -108,36 +109,36 @@ if __name__=="__main__":
 
     args = parser.parse_args()
     env_name = args.env_name
-    output_ids = ['00025', '00325', '00800', '01450', 'mean', 'map']
+    output_id = args.output_id
+    #output_ids = ['00025', '00325', '00800', '01450', 'mean', 'map']
+    #if env_name == 'enduro':
+    #    output_ids = ['03125', '03425', '03900', '04875', 'mean', 'map']
+    print("generating feature counts for",output_id)
+    #set seeds
+    seed = int(args.seed)
+    torch.manual_seed(seed)
+    np.random.seed(seed)
+    tf.set_random_seed(seed)
+
+    device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+    feature_net = nnet.Net()
     if env_name == 'enduro':
-        output_ids = ['03125', '03425', '03900', '04875', 'mean', 'map']
-    for output_id in output_ids:
-        print("generating feature counts for",output_id)
-        #set seeds
-        seed = int(args.seed)
-        torch.manual_seed(seed)
-        np.random.seed(seed)
-        tf.set_random_seed(seed)
+        feature_net.load_state_dict(torch.load('/scratch/cluster/dsbrown/pretrained_networks/trex_icml/' + env_name + '_trajs_masking.params'))
+    else:
+        feature_net.load_state_dict(torch.load('/scratch/cluster/dsbrown/pretrained_networks/trex_icml/' + env_name + '_progress_masking.params'))
+    feature_net.to(device)
 
-        device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
-        feature_net = nnet.Net()
-        if env_name == 'enduro':
-            feature_net.load_state_dict(torch.load('/scratch/cluster/dsbrown/pretrained_networks/trex_icml/' + env_name + '_trajs_masking.params'))
-        else:
-            feature_net.load_state_dict(torch.load('/scratch/cluster/dsbrown/pretrained_networks/trex_icml/' + env_name + '_progress_masking.params'))
-        feature_net.to(device)
-
-        if output_id == 'mean' or output_id == 'map':
-            checkpointpath = '/scratch/cluster/dsbrown/tflogs/mcmc/' + env_name + '_linear_' + output_id + '_0/checkpoints/43000'
-        else:
-            checkpointpath = '/scratch/cluster/dsbrown/models/' + env_name + '_25/' + output_id
-        print("*"*10)
-        print(env_name)
-        print("*"*10)
-        returns, ave_feature_counts = get_policy_feature_counts(env_name, checkpointpath, feature_net, args.num_rollouts)
-        print("returns", returns)
-        print("feature counts", ave_feature_counts)
-        writer = open("../policies/" + env_name + "_" + output_id + "_fcounts.txt", 'w')
-        utils.write_line(ave_feature_counts, writer)
-        utils.write_line(returns, writer, newline=False)
-        writer.close()
+    if output_id == 'mean' or output_id == 'map':
+        checkpointpath = '/scratch/cluster/dsbrown/tflogs/mcmc/' + env_name + '_linear_' + output_id + '_0/checkpoints/43000'
+    else:
+        checkpointpath = '/scratch/cluster/dsbrown/models/' + env_name + '_25/' + output_id
+    print("*"*10)
+    print(env_name)
+    print("*"*10)
+    returns, ave_feature_counts = get_policy_feature_counts(env_name, checkpointpath, feature_net, args.num_rollouts)
+    print("returns", returns)
+    print("feature counts", ave_feature_counts)
+    writer = open("../policies/" + env_name + "_" + output_id + "_fcounts.txt", 'w')
+    utils.write_line(ave_feature_counts, writer)
+    utils.write_line(returns, writer, newline=False)
+    writer.close()
