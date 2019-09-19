@@ -87,6 +87,8 @@ def get_policy_feature_counts(env_name, checkpointpath, feature_net, num_rollout
 
     env.close()
     #tf.reset_default_graph()
+    del agent
+    del env
 
     ave_fcounts = f_counts/episode_count
 
@@ -107,9 +109,10 @@ if __name__=="__main__":
     args = parser.parse_args()
     env_name = args.env_name
     output_ids = ['00025', '00325', '00800', '01450', 'mean', 'map']
-    if env_name == enduro:
+    if env_name == 'enduro':
         output_ids = ['03125', '03425', '03900', '04875', 'mean', 'map']
     for output_id in output_ids:
+        print("generating feature counts for",output_id)
         #set seeds
         seed = int(args.seed)
         torch.manual_seed(seed)
@@ -118,13 +121,13 @@ if __name__=="__main__":
 
         device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
         feature_net = nnet.Net()
-        if env_name is 'enduro':
+        if env_name == 'enduro':
             feature_net.load_state_dict(torch.load('/scratch/cluster/dsbrown/pretrained_networks/trex_icml/' + env_name + '_trajs_masking.params'))
         else:
             feature_net.load_state_dict(torch.load('/scratch/cluster/dsbrown/pretrained_networks/trex_icml/' + env_name + '_progress_masking.params'))
         feature_net.to(device)
 
-        if output_id is 'mean' or output_id is 'map':
+        if output_id == 'mean' or output_id == 'map':
             checkpointpath = '/scratch/cluster/dsbrown/tflogs/mcmc/' + env_name + '_linear_' + output_id + '_0/checkpoints/43000'
         else:
             checkpointpath = '/scratch/cluster/dsbrown/models/' + env_name + '_25/' + output_id
@@ -134,7 +137,7 @@ if __name__=="__main__":
         returns, ave_feature_counts = get_policy_feature_counts(env_name, checkpointpath, feature_net, args.num_rollouts)
         print("returns", returns)
         print("feature counts", ave_feature_counts)
-        writer = open("../policies/" + env_name + ""_" + output_id + "_fcounts.txt", 'w')
+        writer = open("../policies/" + env_name + "_" + output_id + "_fcounts.txt", 'w')
         utils.write_line(ave_feature_counts, writer)
         utils.write_line(returns, writer, newline=False)
         writer.close()
