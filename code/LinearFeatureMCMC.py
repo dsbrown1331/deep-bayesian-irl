@@ -1,10 +1,14 @@
+#make sure it uses the custom baselines package
+import sys
+sys.path.insert(0,'./baselines/')
+
 import argparse
 # coding: utf-8
 
 # Take as input a compressed pretrained network or run T_REX before hand
 # Then run MCMC and save posterior chain
 
-import sys
+
 import pickle
 import copy
 import gym
@@ -17,6 +21,8 @@ import torch.nn.functional as F
 from run_test import *
 from nnet import Net
 from baselines.common.trex_utils import preprocess
+
+
 
 def generate_debug_demos(env, env_name, agent, model_dir):
     checkpoint_min = 200 #50
