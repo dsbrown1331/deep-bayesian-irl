@@ -492,11 +492,9 @@ def mcmc_map_search(reward_net, demonstrations, pairwise_prefs, demo_cnts, num_s
 if __name__=="__main__":
     parser = argparse.ArgumentParser(description=None)
     parser.add_argument('--env_name', default='', help='Select the environment name to run, i.e. pong')
-    parser.add_argument('--reward_model_path', default='', help="name and location for learned model params, e.g. ./learned_models/breakout.params")
+    parser.add_argument('--map_reward_model_path', default='', help="name and location for learned model params, e.g. ./learned_models/breakout.params")
     parser.add_argument('--seed', default=0, help="random seed for experiments")
     parser.add_argument('--models_dir', default = ".", help="path to directory that contains checkpoint models for demos are stored")
-    parser.add_argument('--num_trajs', default = 0, type=int, help="number of downsampled full trajectories")
-    parser.add_argument('--num_snippets', default = 6000, type = int, help = "number of short subtrajectories to sample")
     parser.add_argument('--num_mcmc_steps', default=2000, type = int, help="number of proposals to generate for MCMC")
     parser.add_argument('--mcmc_step_size', default = 0.005, type=float, help="proposal step is gaussian with zero mean and mcmc_step_size stdev")
     parser.add_argument('--pretrained_network', help='path to pretrained network weights to form \phi(s) using all but last layer')
@@ -618,7 +616,7 @@ if __name__=="__main__":
     best_reward.fc2 = best_reward_lastlayer
     best_reward.to(device)
     #save best reward network
-    torch.save(best_reward.state_dict(), args.reward_model_path)
+    torch.save(best_reward.state_dict(), args.map_reward_model_path)
     demo_pairs, preference_labels = create_mcmc_likelihood_data(demonstrations)
     print("best reward ll", calc_pairwise_ranking_loss(best_reward, demo_pairs, preference_labels))
     print_traj_returns(best_reward, demonstrations)
