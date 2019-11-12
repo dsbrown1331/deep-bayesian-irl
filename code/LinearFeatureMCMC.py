@@ -597,10 +597,17 @@ if __name__=="__main__":
         #print(demo_cnts.shape)
 
     #just need index tuples (i,j) denoting j is preferred to i. Assuming all pairwise prefs for now
+    #check if really better, there might be ties!
     pairwise_prefs = []
     for i in range(len(demonstrations)):
         for j in range(i+1, len(demonstrations)):
-            pairwise_prefs.append((i,j))
+            if sorted_returns[i] < sorted_returns[j]:
+                pairwise_prefs.append((i,j))
+            else: # they are equal
+                print("equal prefs", i, j, sorted_returns[i], sorted_returns[j])
+                pairwise_prefs.append((i,j))
+                pairwise_prefs.append((j,i))
+
 
     #run random search over weights
     #best_reward = random_search(reward_net, demonstrations, 40, stdev = 0.01)

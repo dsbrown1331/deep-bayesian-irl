@@ -13,19 +13,24 @@ import nnet
 from baselines.common.trex_utils import preprocess
 import utils
 
-def get_policy_feature_counts(env_name, checkpointpath, feature_net, num_rollouts):
+def get_policy_feature_counts(env_name, checkpointpath, feature_net, num_rollouts, fixed_horizon):
     if env_name == "spaceinvaders":
-        env_id = "SpaceInvadersNoFrameskip-v4"
+        env_id = "SpaceInvaders"
     elif env_name == "mspacman":
-        env_id = "MsPacmanNoFrameskip-v4"
+        env_id = "MsPacman"
     elif env_name == "videopinball":
-        env_id = "VideoPinballNoFrameskip-v4"
+        env_id = "VideoPinball"
     elif env_name == "beamrider":
-        env_id = "BeamRiderNoFrameskip-v4"
+        env_id = "BeamRider"
     elif env_name == "montezumarevenge":
-        env_id = "MontezumaRevengeNoFrameskip-v4"
+        env_id = "MontezumaRevenge"
     else:
-        env_id = env_name[0].upper() + env_name[1:] + "NoFrameskip-v4"
+        env_id = env_name[0].upper() + env_name[1:]
+
+    if fixed_horizon:
+        env_id += "NoFrameskipFixedHorizon-v0"
+    else:
+        env_id += "NoFrameskip-v4"
 
     env_type = "atari"
 
@@ -102,6 +107,7 @@ if __name__=="__main__":
     parser.add_argument('--pretrained_network', help='path to pretrained network weights to form \phi(s) using all but last layer')
     parser.add_argument('--num_rollouts', type=int, help='number of rollouts to compute feature counts')
     parser.add_argument('--output_id', default='', help='unique id for output file name')
+    parser.add_argument('--fixed_horizon', action='store_true')
 
 
     args = parser.parse_args()
@@ -121,10 +127,10 @@ if __name__=="__main__":
     print("*"*10)
     print(env_name)
     print("*"*10)
-    returns, ave_feature_counts = get_policy_feature_counts(env_name, checkpointpath, feature_net, args.num_rollouts)
+    returns, ave_feature_counts = get_policy_feature_counts(env_name, checkpointpath, feature_net, args.num_rollouts, args.fixed_horizon)
     print("returns", returns)
     print("feature counts", ave_feature_counts)
-    writer = open("../policies/breakout_" + args.output_id + "_fcounts.txt", 'w')
+    writer = open("../policies/" + env_name + "_" + args.output_id + "_fcounts.txt", 'w')
     utils.write_line(ave_feature_counts, writer)
     utils.write_line(returns, writer, newline=False)
     writer.close()
