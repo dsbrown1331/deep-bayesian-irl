@@ -1,5 +1,7 @@
 import argparse
-# Learn to regress from pixels to reward but rewards are either 0.0 or 1.0
+# Learn to regress from pixels to clipped rewards from observations
+# I oversample the non-zero observations to balance the data since usually about 80-90% of the observations have zero reward
+# This might be causing false positives, though.
 
 import pickle
 import gym

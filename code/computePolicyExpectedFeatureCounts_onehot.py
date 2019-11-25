@@ -18,7 +18,7 @@ import utils
 ### Code to run policy evaluation via MC sampling from pretrained rewards using the T-rex architecture but trained on ground truth rewards for regresssion
 
 
-def get_policy_feature_counts(env_name, checkpointpath, feature_net, num_rollouts):
+def get_policy_feature_counts(env_name, checkpointpath, num_rollouts):
     if env_name == "spaceinvaders":
         env_id = "SpaceInvadersNoFrameskip-v4"
     elif env_name == "mspacman":
@@ -58,7 +58,7 @@ def get_policy_feature_counts(env_name, checkpointpath, feature_net, num_rollout
     agent.load(checkpointpath)
     episode_count = num_rollouts
 
-    f_counts = np.zeros(feature_net.fc2.in_features + 1)
+    f_counts = np.zeros(3)  #neg, zero, pos clipped rewards
 
     for i in range(episode_count):
         done = False
@@ -76,7 +76,12 @@ def get_policy_feature_counts(env_name, checkpointpath, feature_net, num_rollout
             ob, r, done, _ = env.step(action)
             ob_processed = preprocess(ob, env_name)
             #print(ob_processed.shape)
-            phi_s = torch.cat((feature_net.state_feature(torch.from_numpy(ob_processed).float().to(device)).cpu().squeeze(), torch.tensor([1.]))).numpy()
+            if np.sign(r[0]) == -1:
+                phi_s = np.array([1.0, 0.0, 0.0])
+            elif np.sign(r[0]) == 0:
+                phi_s = np.array([0.0, 1.0, 0.0])
+            else:
+                phi_s = np.array([0.0, 0.0, 1.0])
             #print(phi_s.shape)
             f_counts += phi_s
             steps += 1
@@ -125,10 +130,7 @@ if __name__=="__main__":
     np.random.seed(seed)
     tf.set_random_seed(seed)
 
-    device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
-    feature_net = nnet.Net()
-    feature_net.load_state_dict(torch.load('./learned_models/' + env_name + '_trexnet_reward.params'))
-    feature_net.to(device)
+
 
     if output_id == 'mean' or output_id == 'map':
         checkpointpath = '/scratch/cluster/dsbrown/tflogs/mcmc/' + env_name + '_linear_' + output_id + '_0/checkpoints/43000'
@@ -137,10 +139,10 @@ if __name__=="__main__":
     print("*"*10)
     print(env_name)
     print("*"*10)
-    returns, ave_feature_counts = get_policy_feature_counts(env_name, checkpointpath, feature_net, args.num_rollouts)
+    returns, ave_feature_counts = get_policy_feature_counts(env_name, checkpointpath, args.num_rollouts)
     print("returns", returns)
     print("feature counts", ave_feature_counts)
-    writer = open("../policies/" + env_name + "_" + output_id + "_fcounts_gt.txt", 'w')
+    writer = open("../policies/" + env_name + "_" + output_id + "_fcounts_onehot.txt", 'w')
     utils.write_line(ave_feature_counts, writer)
     utils.write_line(returns, writer, newline=False)
     writer.close()
