@@ -78,8 +78,8 @@ def get_policy_feature_counts(env_name, checkpointpath, feature_net, num_rollout
             ob, r, done, _ = env.step(action)
             ob_processed = preprocess(ob, env_name)
             #print(ob_processed.shape)
-            phi_s = torch.cat((feature_net.state_feature(torch.from_numpy(ob_processed).float().to(device)).cpu().squeeze(), torch.tensor([1.]))).numpy()
-            #print(phi_s.shape)
+            phi_s = feature_net.state_feature(torch.from_numpy(ob_processed).float().to(device)).cpu().squeeze().numpy()
+            print(phi_s.shape)
             f_counts += phi_s
             steps += 1
             #print(steps)

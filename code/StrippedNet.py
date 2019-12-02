@@ -9,6 +9,7 @@
 # Long imports
 import torch
 import torch.nn as nn
+import torch.nn.functional as F
 #----------------------------------------------------------------------------------------
 
 # Arbitrarily chosen number of dimensions in latent space
