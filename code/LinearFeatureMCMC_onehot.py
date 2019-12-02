@@ -414,7 +414,6 @@ def mcmc_map_search(demonstrations, pairwise_prefs, demo_cnts, num_steps, step_s
 if __name__=="__main__":
     parser = argparse.ArgumentParser(description=None)
     parser.add_argument('--env_name', default='', help='Select the environment name to run, i.e. pong')
-    parser.add_argument('--map_reward_model_path', default='', help="name and location for learned model params, e.g. ./learned_models/breakout.params")
     parser.add_argument('--seed', default=0, help="random seed for experiments")
     parser.add_argument('--models_dir', default = ".", help="path to directory that contains checkpoint models for demos are stored")
     parser.add_argument('--num_mcmc_steps', default=2000, type = int, help="number of proposals to generate for MCMC")

@@ -1,3 +1,7 @@
+### This code will take in any pretrained network and compute the expected feature counts via Monte Carlo sampling according to the last
+### layer of the pretrained network
+
+
 import os
 import sys
 import pickle
@@ -9,16 +13,14 @@ import torch
 from run_test import *
 #import matplotlib.pylab as plt
 import argparse
-import nnet
+import StrippedNet
 from baselines.common.trex_utils import preprocess
 import utils
 
 
 
-### Code to run policy evaluation via MC sampling from pretrained rewards using the T-rex architecture but trained on ground truth rewards for regresssion
 
-
-def get_policy_feature_counts(env_name, checkpointpath, num_rollouts):
+def get_policy_feature_counts(env_name, checkpointpath, feature_net, num_rollouts):
     if env_name == "spaceinvaders":
         env_id = "SpaceInvadersNoFrameskip-v4"
     elif env_name == "mspacman":
@@ -58,7 +60,7 @@ def get_policy_feature_counts(env_name, checkpointpath, num_rollouts):
     agent.load(checkpointpath)
     episode_count = num_rollouts
 
-    f_counts = np.zeros(3)  #neg, zero, pos clipped rewards
+    f_counts = np.zeros(feature_net.fc2.in_features + 1)
 
     for i in range(episode_count):
         done = False
@@ -73,15 +75,10 @@ def get_policy_feature_counts(env_name, checkpointpath, num_rollouts):
         while True:
             action = agent.act(ob, r, done)
             #print(action)
-            ob, r, done, _ = 0 #env.step(action)
+            ob, r, done, _ = env.step(action)
             ob_processed = preprocess(ob, env_name)
             #print(ob_processed.shape)
-            if np.sign(r[0]) == -1:
-                phi_s = np.array([1.0, 0.0, 0.0])
-            elif np.sign(r[0]) == 0:
-                phi_s = np.array([0.0, 1.0, 0.0])
-            else:
-                phi_s = np.array([0.0, 0.0, 1.0])
+            phi_s = torch.cat((feature_net.state_feature(torch.from_numpy(ob_processed).float().to(device)).cpu().squeeze(), torch.tensor([1.]))).numpy()
             #print(phi_s.shape)
             f_counts += phi_s
             steps += 1
@@ -112,7 +109,7 @@ if __name__=="__main__":
     parser.add_argument('--env_name', default='', help='Select the environment name to run, i.e. pong')
     parser.add_argument('--output_id', help="either map or mean or number of checkpoint")
     #parser.add_argument('--checkpointpath', default='', help='path to checkpoint to run eval on')
-    #parser.add_argument('--pretrained_network', help='path to pretrained network weights to form \phi(s) using all but last layer')
+    parser.add_argument('--pretrained_network', help='path to pretrained network weights to form \phi(s) using all but last layer')
     parser.add_argument('--num_rollouts', type=int, help='number of rollouts to compute feature counts')
     #parser.add_argument('--output_id', default='', help='unique id for output file name')
 
@@ -130,21 +127,22 @@ if __name__=="__main__":
     np.random.seed(seed)
     tf.set_random_seed(seed)
 
-
+    device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+    feature_net = StrippedNet.Net()
+    feature_net.load_state_dict(torch.load(args.pretrained_network))
+    feature_net.to(device)
 
     if output_id == 'mean' or output_id == 'map':
         checkpointpath = '/scratch/cluster/dsbrown/tflogs/mcmc/' + env_name + '_linear_' + output_id + '_0/checkpoints/43000'
-    elif output_id == "noop": #doesn't matter
-        checkpointpath = '/scratch/cluster/dsbrown/models/' + env_name + '_25/00001'
     else:
         checkpointpath = '/scratch/cluster/dsbrown/models/' + env_name + '_25/' + output_id
     print("*"*10)
     print(env_name)
     print("*"*10)
-    returns, ave_feature_counts = get_policy_feature_counts(env_name, checkpointpath, args.num_rollouts)
+    returns, ave_feature_counts = get_policy_feature_counts(env_name, checkpointpath, feature_net, args.num_rollouts)
     print("returns", returns)
     print("feature counts", ave_feature_counts)
-    writer = open("../policies/" + env_name + "_" + output_id + "_fcounts_onehot.txt", 'w')
+    writer = open("../policies/" + env_name + "_" + output_id + "_fcounts_auxiliary.txt", 'w')
     utils.write_line(ave_feature_counts, writer)
     utils.write_line(returns, writer, newline=False)
     writer.close()
