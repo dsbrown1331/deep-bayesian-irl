@@ -60,7 +60,7 @@ def get_policy_feature_counts(env_name, checkpointpath, feature_net, num_rollout
     agent.load(checkpointpath)
     episode_count = num_rollouts
 
-    f_counts = np.zeros(feature_net.fc2.in_features + 1)
+    f_counts = np.zeros(feature_net.fc2.in_features)
 
     for i in range(episode_count):
         done = False
@@ -79,7 +79,7 @@ def get_policy_feature_counts(env_name, checkpointpath, feature_net, num_rollout
             ob_processed = preprocess(ob, env_name)
             #print(ob_processed.shape)
             phi_s = feature_net.state_feature(torch.from_numpy(ob_processed).float().to(device)).cpu().squeeze().numpy()
-            print(phi_s.shape)
+            #print(phi_s.shape)
             f_counts += phi_s
             steps += 1
             #print(steps)
