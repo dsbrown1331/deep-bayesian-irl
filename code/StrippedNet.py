@@ -19,6 +19,8 @@ class Net(nn.Module):
     def __init__(self):
         super().__init__()
 
+        self.device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+
         self.conv1 = nn.Conv2d(4, 16, 7, stride=3)
         self.conv2 = nn.Conv2d(16, 16, 5, stride=2)
         self.conv3 = nn.Conv2d(16, 16, 3, stride=1)
@@ -57,7 +59,7 @@ class Net(nn.Module):
         r = self.fc2(mu)
         sum_rewards += torch.sum(r)
         sum_abs_rewards += torch.sum(torch.abs(r))
-        return sum_rewards, sum_abs_rewards, mu
+        return sum_rewards#, sum_abs_rewards, mu
 
     def forward(self, traj_i, traj_j):
         '''compute cumulative return for each trajectory and return logits'''
