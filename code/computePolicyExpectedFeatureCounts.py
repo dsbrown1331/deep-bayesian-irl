@@ -13,7 +13,7 @@ import nnet
 from baselines.common.trex_utils import preprocess
 import utils
 
-def get_policy_feature_counts(env_name, checkpointpath, feature_net, num_rollouts):
+def get_policy_feature_counts(env_name, checkpointpath, feature_net, num_rollouts, add_bias=False):
     if env_name == "spaceinvaders":
         env_id = "SpaceInvadersNoFrameskip-v4"
     elif env_name == "mspacman":
@@ -53,7 +53,10 @@ def get_policy_feature_counts(env_name, checkpointpath, feature_net, num_rollout
     agent.load(checkpointpath)
     episode_count = num_rollouts
 
-    f_counts = np.zeros(feature_net.fc2.in_features + 1)
+    if add_bias:
+        f_counts = np.zeros(feature_net.fc2.in_features + 1)
+    else:
+        f_counts = np.zeros(feature_net.fc2.in_features)
 
     for i in range(episode_count):
         done = False
@@ -71,7 +74,10 @@ def get_policy_feature_counts(env_name, checkpointpath, feature_net, num_rollout
             ob, r, done, _ = env.step(action)
             ob_processed = preprocess(ob, env_name)
             #print(ob_processed.shape)
-            phi_s = torch.cat((feature_net.state_feature(torch.from_numpy(ob_processed).float().to(device)).cpu().squeeze(), torch.tensor([1.]))).numpy()
+            if add_bias:
+                phi_s = torch.cat((feature_net.state_feature(torch.from_numpy(ob_processed).float().to(device)).cpu().squeeze(), torch.tensor([1.]))).numpy()
+            else:
+                phi_s = feature_net.state_feature(torch.from_numpy(ob_processed).float().to(device)).cpu().squeeze().numpy()
             #print(phi_s.shape)
             f_counts += phi_s
             steps += 1
@@ -104,10 +110,12 @@ if __name__=="__main__":
     #parser.add_argument('--checkpointpath', default='', help='path to checkpoint to run eval on')
     #parser.add_argument('--pretrained_network', help='path to pretrained network weights to form \phi(s) using all but last layer')
     parser.add_argument('--num_rollouts', type=int, help='number of rollouts to compute feature counts')
+    parser.add_argument('--add_bias', action='store_false')
     #parser.add_argument('--output_id', default='', help='unique id for output file name')
 
 
     args = parser.parse_args()
+    print(args)
     env_name = args.env_name
     output_id = args.output_id
     #output_ids = ['00025', '00325', '00800', '01450', 'mean', 'map']
@@ -135,7 +143,7 @@ if __name__=="__main__":
     print("*"*10)
     print(env_name)
     print("*"*10)
-    returns, ave_feature_counts = get_policy_feature_counts(env_name, checkpointpath, feature_net, args.num_rollouts)
+    returns, ave_feature_counts = get_policy_feature_counts(env_name, checkpointpath, feature_net, args.num_rollouts, args.add_bias)
     print("returns", returns)
     print("feature counts", ave_feature_counts)
     writer = open("../policies/" + env_name + "_" + output_id + "_fcounts.txt", 'w')
