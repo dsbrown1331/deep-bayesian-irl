@@ -146,7 +146,7 @@ if __name__=="__main__":
     returns, ave_feature_counts = get_policy_feature_counts(env_name, checkpointpath, feature_net, args.num_rollouts, args.add_bias)
     print("returns", returns)
     print("feature counts", ave_feature_counts)
-    writer = open("../policies/" + env_name + "_" + output_id + "_fcounts.txt", 'w')
+    writer = open("../policies/" + env_name + "_" + output_id + "_fcounts_" + str(args.num_rollouts) + ".txt", 'w')
     utils.write_line(ave_feature_counts, writer)
     utils.write_line(returns, writer, newline=False)
     writer.close()
