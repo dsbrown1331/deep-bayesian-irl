@@ -31,8 +31,8 @@ class PolicyNet(nn.Module):
         self.conv2 = pretrained_net.conv2
         self.conv3 = pretrained_net.conv3
         self.conv4 = pretrained_net.conv4
-        self.fc1 = pretrained_net.fc1
-        self.fc2 = nn.Linear(pretrained_net.fc1.out_features, env.action_space.n)
+        self.fc1 = nn.Linear(784, 256)#pretrained_net.fc1
+        self.fc2 = nn.Linear(256, env.action_space.n)#(pretrained_net.fc1.out_features, env.action_space.n)
         #self.fc3 = nn.Linear(32, env.action_space.n)
         self.device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
@@ -68,8 +68,13 @@ class PolicyNet(nn.Module):
 
 
 
-def generate_fitness(env, env_name, policy, reward_fn, num_episodes, render=False, softmax=True):
+def generate_fitness(env, env_name, policy, reward_fn, num_episodes, seed, render=False, softmax=True):
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+    torch.manual_seed(seed)
+    np.random.seed(seed)
+    tf.set_random_seed(seed)
+    env.unwrapped.envs[0].seed(seed)
+
     learning_returns = []
     true_returns = []
     for i in range(num_episodes):
@@ -90,6 +95,7 @@ def generate_fitness(env, env_name, policy, reward_fn, num_episodes, render=Fals
         while True:
 
             action = policy.select_action(ob_cuda, softmax=softmax)
+            #print(action)
             ob, r, done, _ = env.step(action)
             if render:
                 env.render()
@@ -103,8 +109,9 @@ def generate_fitness(env, env_name, policy, reward_fn, num_episodes, render=Fals
             #print(reward_fn.predict_reward(ob_cuda).item())
             acc_reward += reward_fn.predict_reward(ob_cuda).item()
             true_reward += r
-            if done or steps > 2000: #TODO: remove this if I can since it will hurt performance
-                #print("rollout: {}, steps: {}, return: {}".format(i, steps,acc_reward))
+            if done or steps > 1000: #TODO: remove this if I can since it will hurt performance
+                if render:
+                    print("rollout: {}, steps: {}, pred return: {}, actual return {}".format(i, steps,acc_reward, true_reward))
                 break
         learning_returns.append(acc_reward)
         true_returns.append(true_reward)
@@ -130,7 +137,7 @@ def predict_traj_return(net, traj):
 
 
 
-def random_search(policy_net, reward_fn, num_trials, stdev, env, env_name, num_evals):
+def random_search(policy_net, reward_fn, num_trials, stdev, env, env_name, num_evals, seed):
     '''hill climbing random search'''
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
@@ -138,19 +145,22 @@ def random_search(policy_net, reward_fn, num_trials, stdev, env, env_name, num_e
     best_policy = copy.deepcopy(policy_net)
 
     for i in range(num_trials):
+        torch.manual_seed(seed + i * 13)
+        np.random.seed(seed + i * 13)
+
         print()
         print("trial", i)
         policy_proposal = copy.deepcopy(best_policy)
         #add random noise to weights of last two layers
         with torch.no_grad():
-            for param in policy_proposal.fc2.parameters():
+            for param in policy_proposal.fc1.parameters():
                 param.add_(torch.randn(param.size()).to(device) * stdev)
-            for param in policy_proposal.fc2.parameters():
-                print(param)
-            #for param in policy_net.fc3.parameters():
-            #    param.add_(torch.randn(param.size()).to(device) * stdev)
+            #for param in policy_proposal.fc2.parameters():
+            #    print(param)
+            for param in policy_net.fc2.parameters():
+                param.add_(torch.randn(param.size()).to(device) * stdev)
 
-        current_fitness, gt_fitness = generate_fitness(env, env_name, policy_proposal, reward_fn, num_evals, render=False, softmax=True)
+        current_fitness, gt_fitness = generate_fitness(env, env_name, policy_proposal, reward_fn, num_evals, seed, render=False, softmax=True)
         print("true fitness", gt_fitness)
         if gt_fitness > best_fitness:
             best_fitness = gt_fitness
@@ -170,7 +180,8 @@ if __name__=="__main__":
     parser.add_argument('--num_rand_steps', default=2000, type = int, help="number of proposals to generate for MCMC")
     parser.add_argument('--rand_step_size', default = 0.1, type=float, help="proposal step is gaussian with zero mean and mcmc_step_size stdev")
     parser.add_argument('--pretrained_network', help='path to pretrained network weights to form \phi(s) using all but last layer')
-    parser.add_argument('--num_rollouts', default=5, type=int, help="number of times to evaluate fitness")
+    parser.add_argument('--num_rollouts', default=25, type=int, help="number of times to evaluate fitness")
+    parser.add_argument('--eval', action='store_true')
 
     args = parser.parse_args()
     env_name = args.env_name
@@ -204,7 +215,6 @@ if __name__=="__main__":
 
 
     env = VecFrameStack(env, 4)
-    agent = PPO2Agent(env, env_type, stochastic)
 
     # Now we download a pretrained network to form \phi(s) the state features where the reward is now w^T \phi(s)
 
@@ -220,7 +230,13 @@ if __name__=="__main__":
 
     #run random search over weights
     #best_reward = random_search(reward_net, demonstrations, 40, stdev = 0.01)
-    best_policy, best_perf = random_search(policy_net, reward_net, args.num_rand_steps, args.rand_step_size, env, env_name, args.num_rollouts)
-    #visualize policy learned
-    generate_fitness(env, env_name, best_policy, reward_net, 3, render=True, softmax=True)
-    torch.save(best_policy.state_dict(), "breakout_random_hillclimbing.params")
+    if not args.eval:
+        best_policy, best_perf = random_search(policy_net, reward_net, args.num_rand_steps, args.rand_step_size, env, env_name, args.num_rollouts, seed)
+        pred, true = generate_fitness(env, env_name, best_policy, reward_net, 1, seed, render=True, softmax=True)
+        print("pred", pred, "true", true)
+        torch.save(best_policy.state_dict(), "breakout_random_hillclimbing.params")
+    else:
+        #visualize policy learned
+        policy_net.load_state_dict(torch.load("breakout_random_hillclimbing.params"))
+        policy_net.to(device)
+        pred, true = generate_fitness(env, env_name, policy_net, reward_net, args.num_rollouts, seed, render=True, softmax=True)
