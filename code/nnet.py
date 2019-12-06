@@ -38,6 +38,25 @@ class Net(nn.Module):
         #print(sum_rewards)
         return sum_rewards
 
+    def predict_reward(self, obs):
+        '''calculate cumulative return of trajectory'''
+        x = obs
+        x = x.permute(0,3,1,2) #get into NCHW format
+        #compute forward pass of reward network
+        x = F.leaky_relu(self.conv1(x))
+        x = F.leaky_relu(self.conv2(x))
+        x = F.leaky_relu(self.conv3(x))
+        x = F.leaky_relu(self.conv4(x))
+        x = x.view(-1, 784)
+        #x = x.view(-1, 1936)
+        x = F.leaky_relu(self.fc1(x))
+        #r = torch.tanh(self.fc2(x)) #clip reward?
+        r = self.fc2(x)
+        r = torch.sigmoid(r) #TODO: try without this
+        return r
+
+
+
 
     def state_features(self, traj):
 
