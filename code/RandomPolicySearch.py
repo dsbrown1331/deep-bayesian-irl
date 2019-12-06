@@ -145,8 +145,8 @@ def random_search(policy_net, reward_fn, num_trials, stdev, env, env_name, num_e
         with torch.no_grad():
             for param in policy_proposal.fc2.parameters():
                 param.add_(torch.randn(param.size()).to(device) * stdev)
-            for param in policy_proposal.fc2.parameters():
-                print(param)
+            #for param in policy_proposal.fc2.parameters():
+            #    print(param)
             #for param in policy_net.fc3.parameters():
             #    param.add_(torch.randn(param.size()).to(device) * stdev)
 
