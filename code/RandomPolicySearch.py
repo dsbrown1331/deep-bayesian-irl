@@ -232,9 +232,9 @@ if __name__=="__main__":
     #best_reward = random_search(reward_net, demonstrations, 40, stdev = 0.01)
     if not args.eval:
         best_policy, best_perf = random_search(policy_net, reward_net, args.num_rand_steps, args.rand_step_size, env, env_name, args.num_rollouts, seed)
-        pred, true = generate_fitness(env, env_name, best_policy, reward_net, 1, seed, render=True, softmax=True)
+        pred, true = generate_fitness(env, env_name, best_policy, reward_net, 1, seed, render=False, softmax=True)
         print("pred", pred, "true", true)
-        torch.save(best_policy.state_dict(), "breakout_random_hillclimbing.params")
+        torch.save(best_policy.state_dict(), "breakout_random_hillclimbing_" + str(args.rand_step_size) +".params")
     else:
         #visualize policy learned
         policy_net.load_state_dict(torch.load("breakout_random_hillclimbing.params"))
