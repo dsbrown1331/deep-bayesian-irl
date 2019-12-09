@@ -31,8 +31,8 @@ class PolicyNet(nn.Module):
         self.conv2 = pretrained_net.conv2
         self.conv3 = pretrained_net.conv3
         self.conv4 = pretrained_net.conv4
-        self.fc1 = nn.Linear(784, 256)#pretrained_net.fc1
-        self.fc2 = nn.Linear(256, env.action_space.n)#(pretrained_net.fc1.out_features, env.action_space.n)
+        self.fc1 = nn.Linear(784, env.action_space.n)#pretrained_net.fc1
+        #self.fc2 = nn.Linear(256, env.action_space.n)#(pretrained_net.fc1.out_features, env.action_space.n)
         #self.fc3 = nn.Linear(32, env.action_space.n)
         self.device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
@@ -50,9 +50,9 @@ class PolicyNet(nn.Module):
             x = F.leaky_relu(self.conv4(x))
             x = x.view(-1, 784)
             #x = x.view(-1, 1936)
-            x = F.leaky_relu(self.fc1(x))
+            #x = F.leaky_relu(self.fc1(x))
             #x = F.leaky_relu(self.fc2(x))
-            logits = self.fc2(x).squeeze()
+            logits = self.fc1(x).squeeze()
             #print(logits)
             probs = F.softmax(logits, dim=0)
             #print("probs",probs)
@@ -137,30 +137,74 @@ def predict_traj_return(net, traj):
 
 
 
-def random_search(policy_net, reward_fn, num_trials, stdev, env, env_name, num_evals, seed):
+def finite_diff_search(policy_net, reward_fn, num_steps, stdev, env, env_name, num_evals, seed, step_size):
     '''hill climbing random search'''
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
-    best_fitness = -np.inf
-    best_policy = copy.deepcopy(policy_net)
+    cur_policy = copy.deepcopy(policy_net)
 
-    for i in range(num_trials):
+    for i in range(num_steps):
+        #need new random seed for each finite diff eval
         torch.manual_seed(seed + i * 13)
         np.random.seed(seed + i * 13)
 
         print()
-        print("trial", i)
-        policy_proposal = copy.deepcopy(best_policy)
-        #add random noise to weights of last two layers
-        with torch.no_grad():
-            for param in policy_proposal.fc1.parameters():
-                param.add_(torch.randn(param.size()).to(device) * stdev)
-            #for param in policy_proposal.fc2.parameters():
-            #    print(param)
-            for param in policy_net.fc2.parameters():
-                param.add_(torch.randn(param.size()).to(device) * stdev)
+        print("step", i)
 
-        current_fitness, gt_fitness = generate_fitness(env, env_name, policy_proposal, reward_fn, num_evals, seed, render=False, softmax=True)
+        #create empty step direction placeholders
+        step_dirs = []
+        with torch.no_grad():
+            for param in cur_policy.fc1.parameters():
+                step_dirs.append(torch.zeros(param.size()).to(device))
+
+
+        for j in range(num_evals): #number of random directions to explore
+            policy_step_forward = copy.deepcopy(cur_policy)
+            polciy_step_backward = copy.deepcopy(cur_policy)
+            #generate noise direction
+            noise = []
+            with torch.no_grad():
+                for param in cur_policy.fc1.parameters():
+                    noise.append(torch.randn(param.size()).to(device) * stdev)
+
+            #add random noise to weights of last two layers
+            with torch.no_grad():
+                for param in policy_step_forward.fc1.parameters():
+                    param.add_(torch.randn(param.size()).to(device) * stdev)
+                #for param in policy_proposal.fc2.parameters():
+                #    print(param)
+                #for param in policy_net.fc2.parameters():
+                #    param.add_(torch.randn(param.size()).to(device) * stdev)
+
+                current_fitness_forward, gt_fitness_forward = generate_fitness(env, env_name, policy_step_forward, reward_fn, 1, seed, render=False, softmax=True)
+
+            #add random noise to weights of last two layers
+            with torch.no_grad():
+                for param in policy_step_backward.fc1.parameters():
+                    param.add_(torch.randn(param.size()).to(device) * stdev)
+                #for param in policy_proposal.fc2.parameters():
+                #    print(param)
+                #for param in policy_net.fc2.parameters():
+                #    param.add_(torch.randn(param.size()).to(device) * stdev)
+
+                current_fitness_backward, gt_fitness_backward = generate_fitness(env, env_name, policy_step_backward, reward_fn, 1, seed, render=False, softmax=True)
+
+            #calc finite diff direction for gradient
+            with torch.no_grad():
+                for indx, layer in enumerate(step_dirs):
+                    layer.add_(gt_fitness_forward - gt_fitness_backward) * noise[indx]
+
+        #average and take step along approximate gradient
+        with torch.no_grad():
+            for layer in step_dirs:
+                layer.divide_(num_evals)
+
+        with torch.no_grad():
+            for param in cur_policy.fc1.parameters():
+                
+
+
+
         print("true fitness", gt_fitness)
         if gt_fitness > best_fitness:
             best_fitness = gt_fitness
