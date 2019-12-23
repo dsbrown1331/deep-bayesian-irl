@@ -11,7 +11,8 @@ class Net(nn.Module):
         self.conv3 = nn.Conv2d(16, 16, 3, stride=1)
         self.conv4 = nn.Conv2d(16, 16, 3, stride=1)
         self.fc1 = nn.Linear(784, 64)
-        self.fc2 = nn.Linear(64, 1)
+        self.fc_mu = nn.Linear(64, 30)
+        self.fc2 = nn.Linear(30, 1)
         self.device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
 
@@ -30,6 +31,11 @@ class Net(nn.Module):
             #x = x.view(-1, 1936)
             x = F.leaky_relu(self.fc1(x))
             #r = torch.tanh(self.fc2(x)) #clip reward?
+
+            
+            x = F.leaky_relu(self.fc_mu(x))
+
+
             r = self.fc2(x)
             #r = torch.sigmoid(r) #TODO: try without this
             sum_rewards += r
@@ -50,6 +56,7 @@ class Net(nn.Module):
         x = x.view(-1, 784)
         #x = x.view(-1, 1936)
         x = F.leaky_relu(self.fc1(x))
+        x = F.leaky_relu(self.fc_mu(x))
         #r = torch.tanh(self.fc2(x)) #clip reward?
         r = self.fc2(x)
         r = torch.sigmoid(r) #TODO: try without this
@@ -61,7 +68,7 @@ class Net(nn.Module):
     def state_features(self, traj):
 
         with torch.no_grad():
-            accum = torch.zeros(1,64).float().to(self.device)
+            accum = torch.zeros(1,30).float().to(self.device)
             for x in traj:
                 x = x.permute(0,3,1,2) #get into NCHW format
                 #compute forward pass of reward network
@@ -72,6 +79,7 @@ class Net(nn.Module):
                 x = x.view(-1, 784)
                 #x = x.view(-1, 1936)
                 x = F.leaky_relu(self.fc1(x))
+                x = F.leaky_relu(self.fc_mu(x))
                 #print(x.size())
                 accum.add_(x)
                 #print(accum)
@@ -88,6 +96,7 @@ class Net(nn.Module):
             x = x.view(-1, 784)
             #x = x.view(-1, 1936)
             x = F.leaky_relu(self.fc1(x))
+            x = F.leaky_relu(self.fc_mu(x))
             #print(x.size())
         return x
 

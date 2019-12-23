@@ -313,6 +313,8 @@ def generate_feature_counts(demos, reward_net):
         traj = np.array(demos[i])
         traj = torch.from_numpy(traj).float().to(device)
         #print(len(trajectory))
+        print(reward_net.state_features(traj))
+        print(torch.tensor([len(demos[i])]).float())
         feature_cnts[i,:] = torch.cat((reward_net.state_features(traj).squeeze(), torch.tensor([len(demos[i])]).float().to(device)))  #append +1 for each timestep for bias weight
     return feature_cnts.to(device)
 
