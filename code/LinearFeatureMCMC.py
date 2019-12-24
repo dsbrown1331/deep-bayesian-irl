@@ -323,6 +323,9 @@ def get_weight_vector(last_layer):
     linear, bias = list(last_layer.parameters())
     #print(linear)
     #print(bias)
+
+    #return linear
+
     with torch.no_grad():
         weights = torch.cat((linear.squeeze(), bias)).cpu().numpy()
     return weights
@@ -413,6 +416,8 @@ def mcmc_map_search(reward_net, demonstrations, pairwise_prefs, demo_cnts, num_s
     #print(bunnY)
 
     map_loglik = starting_loglik
+    with torch.no_grad():
+        reward_net.fc2.bias.fill_(0)
     map_reward = copy.deepcopy(reward_net.fc2)
 
     cur_reward = copy.deepcopy(reward_net.fc2)
@@ -430,13 +435,14 @@ def mcmc_map_search(reward_net, demonstrations, pairwise_prefs, demo_cnts, num_s
         proposal_reward = copy.deepcopy(cur_reward)
         #add random noise to weights of last layer
         with torch.no_grad():
-            for param in proposal_reward.parameters():
-                param.add_(torch.randn(param.size()).to(device) * step_stdev)
+            #for param in proposal_reward.parameters():
+            proposal_reward.weight.add_(torch.randn(proposal_reward.weight.size()).to(device) * step_stdev)
+            proposal_reward.bias.fill_(0)
         l1_norm = np.array([compute_l1(proposal_reward)])
         #normalize the weight vector...
         with torch.no_grad():
-            for param in proposal_reward.parameters():
-                param.div_(torch.from_numpy(l1_norm).float().to(device))
+            #for param in proposal_reward.parameters():
+            proposal_reward.weight.div_(torch.from_numpy(l1_norm).float().to(device))
         if args.debug:
             print("normalized last layer", compute_l1(proposal_reward))
         #debugging info
@@ -497,7 +503,7 @@ if __name__=="__main__":
     parser.add_argument('--map_reward_model_path', default='', help="name and location for learned model params, e.g. ./learned_models/breakout.params")
     parser.add_argument('--seed', default=0, help="random seed for experiments")
     parser.add_argument('--models_dir', default = ".", help="path to directory that contains checkpoint models for demos are stored")
-    parser.add_argument('--num_mcmc_steps', default=2000, type = int, help="number of proposals to generate for MCMC")
+    parser.add_argument('--num_mcmc_steps', default=200000, type = int, help="number of proposals to generate for MCMC")
     parser.add_argument('--mcmc_step_size', default = 0.005, type=float, help="proposal step is gaussian with zero mean and mcmc_step_size stdev")
     parser.add_argument('--pretrained_network', help='path to pretrained network weights to form \phi(s) using all but last layer')
     parser.add_argument('--weight_outputfile', help='filename including path to write the chain to')
