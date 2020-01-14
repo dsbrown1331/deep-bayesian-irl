@@ -5,7 +5,8 @@ sys.path.insert(0,'./baselines/')
 import argparse
 # coding: utf-8
 
-# Use one-hot encodings denoting true clipped rewards to test whether idea works.
+# Use hand tuned feature count vectors for testing the MCMC convergence and distributions.
+# Doesn't actually use any kind of real domain.
 # Then run MCMC and save posterior chain
 
 
@@ -22,80 +23,6 @@ from run_test import *
 from nnet import Net
 from baselines.common.trex_utils import preprocess
 from simplex_projection import euclidean_proj_l1ball
-
-
-
-
-def generate_novice_demos(env, env_name, agent, model_dir, debug):
-    if debug:
-        checkpoint_min = 300
-        checkpoint_max = 400
-        checkpoint_step = 50
-    else:
-        checkpoint_min = 50 #50
-        checkpoint_max = 600
-        checkpoint_step = 50 #50
-    checkpoints = []
-    if env_name == "enduro":
-        checkpoint_min = 3100
-        checkpoint_max = 3650
-    elif env_name == "seaquest":
-        checkpoint_min = 10
-        checkpoint_max = 65
-        checkpoint_step = 5
-    for i in range(checkpoint_min, checkpoint_max + checkpoint_step, checkpoint_step):
-        if i < 10:
-            checkpoints.append('0000' + str(i))
-        elif i < 100:
-            checkpoints.append('000' + str(i))
-        elif i < 1000:
-            checkpoints.append('00' + str(i))
-        elif i < 10000:
-            checkpoints.append('0' + str(i))
-    print(checkpoints)
-
-
-
-    demonstrations = []
-    learning_returns = []
-    learning_rewards = []
-    for checkpoint in checkpoints:
-
-        model_path = model_dir + env_name + "_25/" + checkpoint
-        if env_name == "seaquest":
-            model_path = model_dir + env_name + "_5/" + checkpoint
-
-        agent.load(model_path)
-        episode_count = 1
-        for i in range(episode_count):
-            done = False
-            traj = []
-            gt_rewards = []
-            r = 0
-
-            ob = env.reset()
-            steps = 0
-            acc_reward = 0
-            while True:
-                action = agent.act(ob, r, done)
-                ob, r, done, _ = env.step(action)
-                ob_processed = preprocess(ob, env_name)
-                #ob_processed = ob_processed[0] #get rid of first dimension ob.shape = (1,84,84,4)
-                traj.append(ob_processed)
-                #env.render()
-                gt_rewards.append(r[0])
-                steps += 1
-                acc_reward += np.sign(r[0])
-                if done:
-                    print("checkpoint: {}, steps: {}, clipped return: {}, true reward {}".format(checkpoint, steps,acc_reward, np.sum(gt_rewards)))
-                    break
-            print("traj length", len(traj))
-            print("demo length", len(demonstrations))
-            demonstrations.append(traj)
-            learning_returns.append(acc_reward)
-            learning_rewards.append(gt_rewards)
-
-    return demonstrations, learning_returns, learning_rewards
 
 
 
@@ -293,7 +220,7 @@ def compute_l1(last_layer):
     #print("output", np.sum(np.abs(weights)))
     return np.sum(np.abs(weights))
 
-def mcmc_map_search(demonstrations, pairwise_prefs, demo_cnts, num_steps, step_stdev, weight_output_filename, weight_init):
+def mcmc_map_search(pairwise_prefs, demo_cnts, num_steps, step_stdev, weight_output_filename, weight_init):
     '''run metropolis hastings MCMC and record weights in chain'''
     #demo_pairs, preference_labels = create_mcmc_likelihood_data(demonstrations, pairwise_prefs)
 
@@ -342,7 +269,7 @@ def mcmc_map_search(demonstrations, pairwise_prefs, demo_cnts, num_steps, step_s
     cur_reward = copy.deepcopy(last_layer)
     cur_loglik = starting_loglik
 
-
+    #print(cur_reward)
 
     reject_cnt = 0
     accept_cnt = 0
@@ -356,7 +283,8 @@ def mcmc_map_search(demonstrations, pairwise_prefs, demo_cnts, num_steps, step_s
         #print("before", proposal_reward)
         #proposal_reward = proposal_reward / np.sum(np.abs(proposal_reward))#
         proposal_reward = euclidean_proj_l1ball(proposal_reward)
-        #print("after", proposal_reward)
+        if args.debug:
+            print("after", proposal_reward)
         #print("normalized last layer", np.sum(np.abs(proposal_reward)))
         #debugging info
         #print_traj_returns(proposal_reward, demonstrations)
@@ -413,9 +341,7 @@ def mcmc_map_search(demonstrations, pairwise_prefs, demo_cnts, num_steps, step_s
 
 if __name__=="__main__":
     parser = argparse.ArgumentParser(description=None)
-    parser.add_argument('--env_name', default='', help='Select the environment name to run, i.e. pong')
     parser.add_argument('--seed', default=0, help="random seed for experiments")
-    parser.add_argument('--models_dir', default = ".", help="path to directory that contains checkpoint models for demos are stored")
     parser.add_argument('--num_mcmc_steps', default=2000, type = int, help="number of proposals to generate for MCMC")
     parser.add_argument('--mcmc_step_size', default = 0.005, type=float, help="proposal step is gaussian with zero mean and mcmc_step_size stdev")
     parser.add_argument('--weight_outputfile', help='filename including path to write the chain to')
@@ -424,38 +350,14 @@ if __name__=="__main__":
     parser.add_argument('--weight_init', help="defaults to randn, specify integer value to start in a corner of L1-sphere", default="randn")
 
     args = parser.parse_args()
-    env_name = args.env_name
-    if env_name == "spaceinvaders":
-        env_id = "SpaceInvadersNoFrameskip-v4"
-    elif env_name == "mspacman":
-        env_id = "MsPacmanNoFrameskip-v4"
-    elif env_name == "videopinball":
-        env_id = "VideoPinballNoFrameskip-v4"
-    elif env_name == "beamrider":
-        env_id = "BeamRiderNoFrameskip-v4"
-    else:
-        env_id = env_name[0].upper() + env_name[1:] + "NoFrameskip-v4"
 
-    env_type = "atari"
-    print(env_type)
+    print("Hand crafted feature expectations")
     #set seeds
     seed = int(args.seed)
     torch.manual_seed(seed)
     np.random.seed(seed)
     tf.set_random_seed(seed)
 
-    stochastic = True
-
-
-    env = make_vec_env(env_id, 'atari', 1, seed,
-                       wrapper_kwargs={
-                           'clip_rewards':False,
-                           'episode_life':False,
-                       })
-
-
-    env = VecFrameStack(env, 4)
-    agent = PPO2Agent(env, env_type, stochastic)
 
     if args.debug:
         print("*"*30)
@@ -464,41 +366,46 @@ if __name__=="__main__":
         print("*"*30)
         print("*"*30)
 
-    demonstrations, learning_returns, learning_rewards = generate_novice_demos(env, env_name, agent, args.models_dir, args.debug)
-
-    #sort the demonstrations according to ground truth reward to simulate ranked demos
-
-    print([a[0] for a in zip(learning_returns, demonstrations)])
-    demonstrations = [x for _, x in sorted(zip(learning_returns,demonstrations), key=lambda pair: pair[0])]
-    learning_rewards = [x for _, x in sorted(zip(learning_returns,learning_rewards), key=lambda pair: pair[0])]
-
-    sorted_returns = sorted(learning_returns)
-    print(sorted_returns)
-
-
     num_features = 3
-    print("reward is linear combination of hard-coded clipped reward features")
+    # demo_cnts = np.array([[  58., 3199.,   63.],
+    #                       [  46., 3215.,   62.],
+    #                       [  55., 3191.,   75.],
+    #                       [  47., 3202.,   68.],
+    #                       [  48., 3193.,   76.],
+    #                       [  44., 3198.,   75.],
+    #                       [  40., 3207.,   75.],
+    #                       [  52., 3175.,   96.],
+    #                       [  43., 3184.,   90.],
+    #                       [  55., 3149.,  118.],
+    #                       [  47., 3137.,  140.],
+    #                       [  49., 3119.,  152.]])
 
-    demo_cnts = generate_clipped_feature_counts(demonstrations, learning_rewards, num_features)
+    demo_cnts = np.array([[0. ,568. ,7.],
+                        #[0. ,649. ,7.],
+                        [0. ,746. , 12.],
+                        [0. ,854. , 13. ],
+                        [0. ,928. , 14. ],
+                        [0. ,1263. , 20. ],
+                        [0. ,1502. , 25. ],
+                        #[0. ,1482. , 26. ],
+                        [0. ,1558. , 26. ],
+                        [0. ,1748. , 27. ],
+                        [0. ,1955. , 35. ],
+                        [0. ,2226. , 39. ]])
+    #print("mean", np.mean(demo_cnts, axis = 0))
+    #demo_cnts[:,1:] = demo_cnts[:,1:] / np.mean(demo_cnts[:,1:], axis = 0)
     print(demo_cnts)
+    true_weights = np.array([-0.5,0,+0.5])
+    sorted_returns = np.dot(demo_cnts, true_weights)
+    print("returns", sorted_returns)
 
     if args.plot:
         plotable_cnts = demo_cnts
         import matplotlib.pyplot as plt
         for f in range(num_features):
-            #plt.figure(f)
-            if plotable_cnts[0,f] < plotable_cnts[-1,f]: #increasing
-                plt.figure(0)
-                plt.plot(plotable_cnts[:,f], label='feature ' + str(f))
-                plt.legend()
-            elif plotable_cnts[0,f] > plotable_cnts[-1,f]: #decreasing
-                plt.figure(1)
-                plt.plot(plotable_cnts[:,f], label='feature ' + str(f))
-                plt.legend()
-            else: #unknown
-                plt.figure(2)
-                plt.plot(plotable_cnts[:,f], label='feature ' + str(f))
-                plt.legend()
+            plt.figure(f)
+            plt.plot(plotable_cnts[:,f], label='feature ' + str(f))
+            plt.legend()
 
         plt.show()
         #print(demo_cnts.shape)
@@ -506,8 +413,8 @@ if __name__=="__main__":
     #just need index tuples (i,j) denoting j is preferred to i. Assuming all pairwise prefs for now
     #check if really better, there might be ties!
     pairwise_prefs = []
-    for i in range(len(demonstrations)):
-        for j in range(i+1, len(demonstrations)):
+    for i in range(len(sorted_returns)):
+        for j in range(i+1, len(sorted_returns)):
             if sorted_returns[i] < sorted_returns[j]:
                 pairwise_prefs.append((i,j))
             else: # they are equal
@@ -515,10 +422,10 @@ if __name__=="__main__":
                 pairwise_prefs.append((i,j))
                 pairwise_prefs.append((j,i))
     print(pairwise_prefs)
-    #input()
+
     #run random search over weights
     #best_reward = random_search(reward_net, demonstrations, 40, stdev = 0.01)
-    best_reward_lastlayer = mcmc_map_search(demonstrations, pairwise_prefs, demo_cnts, args.num_mcmc_steps, args.mcmc_step_size, args.weight_outputfile, args.weight_init)
+    best_reward_lastlayer = mcmc_map_search(pairwise_prefs, demo_cnts, args.num_mcmc_steps, args.mcmc_step_size, args.weight_outputfile, args.weight_init)
     #turn this into a full network
     #best_reward = Net()
     #best_reward.load_state_dict(torch.load(args.pretrained_network))

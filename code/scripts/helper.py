@@ -1,20 +1,27 @@
 import numpy as np
 
-def get_weightchain_array(mcmc_chain_filename, burn=1000, skip=5):
+def get_weightchain_array(mcmc_chain_filename, burn=1000, skip=5, return_likelihood=False):
     #load the mean of the MCMC chain
     reader = open(mcmc_chain_filename)
     data = []
+    likelihood = []
     for line in reader:
         parsed = line.strip().split(',')
         np_line = []
         for s in parsed[:-1]: #don't get last element since it's the likelihood
             np_line.append(float(s))
+        likelihood.append(float(parsed[-1]))
         data.append(np_line)
     data = np.array(data)
     data = data[burn::skip,:]
+    likelihood = np.array(likelihood)
+    likelihood = likelihood[burn::skip]
     print("chain shape", data.shape)
     reader.close()
-    return data
+    if not return_likelihood:
+        return data
+    else:
+        return data, likelihood
 
 def parse_avefcount_array(fcount_file):
     '''returns a list of returns and a numpy array of ave feature counts'''

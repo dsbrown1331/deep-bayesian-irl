@@ -5,7 +5,9 @@ sys.path.insert(0,'./baselines/')
 import argparse
 # coding: utf-8
 
+# I'm using a truncation strategy where I take the longest demo and select that to be the finite horizon.
 # Use one-hot encodings denoting true clipped rewards to test whether idea works.
+#
 # Then run MCMC and save posterior chain
 
 
@@ -247,13 +249,17 @@ def random_search(reward_net, demonstrations, num_trials, stdev = 0.1):
             print("rejecting")
     return best_reward
 
-def generate_clipped_feature_counts(demos, rewards, num_features):
-    feature_cnts = np.zeros((len(demos), num_features)) #+1 for bias term
+def generate_clipped_truncated_feature_counts(demos, rewards, num_features):
+    #find the max length of the trajectory
+    T = 3000
+    print("truncating/padding demos to max length", T)
+    feature_cnts = np.zeros((len(demos), num_features)) #has padding term
     for i in range(len(demos)):
         #count up how many times it was a -1, 0, or +1 reward
         minus_cnt = 0
         zero_cnt = 0
         plus_cnt = 0
+        pad_cnt = 0
         for r in rewards[i]:
             if np.sign(r) == -1:
                 minus_cnt += 1
@@ -261,9 +267,12 @@ def generate_clipped_feature_counts(demos, rewards, num_features):
                 zero_cnt += 1
             elif np.sign(r) == 1:
                 plus_cnt += 1
+        #add padding as needed
+        if T > len(rewards[i]):
+            pad_cnt = T - len(rewards[i])
 
         #print(np.array([minus_cnt, zero_cnt, plus_cnt, len(demos[i])]))
-        feature_cnts[i,:] = np.array([minus_cnt, zero_cnt, plus_cnt])  #append +1 for each timestep for bias weight
+        feature_cnts[i,:] = np.array([minus_cnt, zero_cnt, plus_cnt, pad_cnt])  #append +1 for each timestep for bias weight
     return feature_cnts
 
 def get_weight_vector(last_layer):
@@ -476,12 +485,12 @@ if __name__=="__main__":
     print(sorted_returns)
 
 
-    num_features = 3
-    print("reward is linear combination of hard-coded clipped reward features")
+    num_features = 4
+    print("reward is linear combination of hard-coded clipped reward features with a padding feature")
 
-    demo_cnts = generate_clipped_feature_counts(demonstrations, learning_rewards, num_features)
+    demo_cnts = generate_clipped_truncated_feature_counts(demonstrations, learning_rewards, num_features)
     print(demo_cnts)
-
+    #input()
     if args.plot:
         plotable_cnts = demo_cnts
         import matplotlib.pyplot as plt
