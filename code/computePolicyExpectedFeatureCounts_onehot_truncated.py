@@ -58,7 +58,10 @@ def get_policy_feature_counts(env_name, checkpointpath, num_rollouts, max_length
     agent.load(checkpointpath)
     episode_count = num_rollouts
 
-    f_counts = np.zeros(4)  #neg, zero, pos clipped rewards
+    if args.no_term:
+        f_counts = np.zeros(3)  #neg, zero, pos clipped rewards
+    else:
+        f_counts = np.zeros(4)
 
     for i in range(episode_count):
         done = False
@@ -78,11 +81,20 @@ def get_policy_feature_counts(env_name, checkpointpath, num_rollouts, max_length
                 ob_processed = preprocess(ob, env_name)
                 #print(ob_processed.shape)
                 if np.sign(r[0]) == -1:
-                    phi_s = np.array([1.0, 0.0, 0.0, 0.0])
+                    if args.no_term:
+                        phi_s = np.array([1.0, 0.0, 0.0])
+                    else:
+                        phi_s = np.array([1.0, 0.0, 0.0, 0.0])
                 elif np.sign(r[0]) == 0:
-                    phi_s = np.array([0.0, 1.0, 0.0, 0.0])
+                    if args.no_term:
+                        phi_s = np.array([0.0, 1.0, 0.0])
+                    else:
+                        phi_s = np.array([0.0, 1.0, 0.0, 0.0])
                 elif np.sign(r[0]) == 1:
-                    phi_s = np.array([0.0, 0.0, 1.0, 0.0])
+                    if args.no_term:
+                        phi_s = np.array([0.0, 0.0, 1.0])
+                    else:
+                        phi_s = np.array([0.0, 0.0, 1.0, 0.0])
                 else:
                     print("error not a valid clipped reward")
                     sys.exit()
@@ -96,11 +108,15 @@ def get_policy_feature_counts(env_name, checkpointpath, num_rollouts, max_length
             else:
                 #add in appropriate padding and then break
                 print("adding padding", max_length - steps)
-                phi_s = (max_length - steps) * np.array([0.0, 0.0, 0.0, 1.0])
+                if args.no_term:
+                    phi_s = (max_length - steps) * np.array([0.0, 1.0, 0.0])
+                else:
+                    phi_s = (max_length - steps) * np.array([0.0, 0.0, 0.0, 1.0])
                 f_counts += phi_s
                 print("f_counts", f_counts)
-                break
 
+                break
+        print("steps: {}, return: {}".format(steps,acc_reward))
 
         learning_returns.append(acc_reward)
 
@@ -127,6 +143,7 @@ if __name__=="__main__":
     parser.add_argument('--num_rollouts', type=int, help='number of rollouts to compute feature counts')
     parser.add_argument('--homedir', action='store_true', help="select this if running from my home dir on laptop")
     #parser.add_argument('--output_id', default='', help='unique id for output file name')
+    parser.add_argument('--no_term', action='store_true', help = "don't use an extra terminal feature")
 
 
     args = parser.parse_args()
@@ -159,7 +176,7 @@ if __name__=="__main__":
     returns, ave_feature_counts = get_policy_feature_counts(env_name, checkpointpath, args.num_rollouts)
     print("returns", returns)
     print("feature counts", ave_feature_counts)
-    writer = open("../policies/" + env_name + "_" + output_id + "_fcounts_onehot_truncated.txt", 'w')
+    writer = open("../policies/" + env_name + "_" + output_id + "_fcounts_onehot_truncated_terminal" + str(args.no_term) + ".txt", 'w')
     utils.write_line(ave_feature_counts, writer)
     utils.write_line(returns, writer, newline=False)
     writer.close()
