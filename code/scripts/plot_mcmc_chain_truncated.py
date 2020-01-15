@@ -9,7 +9,7 @@ parser.add_argument('--mcmc_file', help="name of the file with mcmc data")
 args = parser.parse_args()
 
 #read in the weights as a 2-d array and the feature counts of the policy
-W, log_lik = helper.get_weightchain_array(args.mcmc_file, burn=1000, skip=100, return_likelihood=True)
+W, log_lik = helper.get_weightchain_array(args.mcmc_file, burn=1000, skip=5, return_likelihood=True)
 print("average weight", np.mean(W, axis=0))
 
 max_likelihood = -float('inf')

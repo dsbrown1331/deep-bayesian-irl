@@ -103,17 +103,17 @@ def get_policy_feature_counts(env_name, checkpointpath, num_rollouts, max_length
                 steps += 1
                 #print(steps)
                 acc_reward += r[0]
-                if done:
-                    print("steps: {}, return: {}".format(steps,acc_reward))
+                #if done:
+                #    print("steps: {}, return: {}".format(steps,acc_reward))
             else:
                 #add in appropriate padding and then break
-                print("adding padding", max_length - steps)
+                #print("adding padding", max_length - steps)
                 if args.no_term:
                     phi_s = (max_length - steps) * np.array([0.0, 1.0, 0.0])
                 else:
                     phi_s = (max_length - steps) * np.array([0.0, 0.0, 0.0, 1.0])
                 f_counts += phi_s
-                print("f_counts", f_counts)
+                #print("f_counts", f_counts)
 
                 break
         print("steps: {}, return: {}".format(steps,acc_reward))

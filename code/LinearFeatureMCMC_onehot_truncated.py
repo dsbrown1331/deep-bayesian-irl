@@ -28,7 +28,7 @@ from simplex_projection import euclidean_proj_l1ball
 
 
 
-def generate_novice_demos(env, env_name, agent, model_dir, debug):
+def generate_novice_demos(env, env_name, agent, model_dir, debug, max_horizon = 3000):
     if debug:
         checkpoint_min = 300
         checkpoint_max = 400
@@ -78,7 +78,7 @@ def generate_novice_demos(env, env_name, agent, model_dir, debug):
             ob = env.reset()
             steps = 0
             acc_reward = 0
-            while True:
+            while steps < max_horizon:
                 action = agent.act(ob, r, done)
                 ob, r, done, _ = env.step(action)
                 ob_processed = preprocess(ob, env_name)
@@ -91,6 +91,7 @@ def generate_novice_demos(env, env_name, agent, model_dir, debug):
                 if done:
                     print("checkpoint: {}, steps: {}, clipped return: {}, true reward {}".format(checkpoint, steps,acc_reward, np.sum(gt_rewards)))
                     break
+            print("truncated! checkpoint: {}, steps: {}, clipped return: {}, true reward {}".format(checkpoint, steps,acc_reward, np.sum(gt_rewards)))
             print("traj length", len(traj))
             print("demo length", len(demonstrations))
             demonstrations.append(traj)
@@ -260,7 +261,8 @@ def generate_clipped_truncated_feature_counts(demos, rewards, num_features):
         zero_cnt = 0
         plus_cnt = 0
         pad_cnt = 0
-        for r in rewards[i]:
+        for r_indx in range(min(len(rewards[i]), T)):
+            r = rewards[i][r_indx]
             if np.sign(r) == -1:
                 minus_cnt += 1
             elif np.sign(r) == 0:
@@ -490,7 +492,7 @@ if __name__=="__main__":
 
     demo_cnts = generate_clipped_truncated_feature_counts(demonstrations, learning_rewards, num_features)
     print(demo_cnts)
-    #input()
+    input()
     if args.plot:
         plotable_cnts = demo_cnts
         import matplotlib.pyplot as plt
