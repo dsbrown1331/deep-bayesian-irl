@@ -64,6 +64,7 @@ def get_policy_feature_counts(env_name, checkpointpath, num_rollouts, max_length
         f_counts = np.zeros(4)
 
     for i in range(episode_count):
+        print("epsiode", i)
         done = False
         traj = []
         r = 0
