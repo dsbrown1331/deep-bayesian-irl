@@ -274,7 +274,10 @@ def generate_clipped_truncated_feature_counts(demos, rewards, num_features):
             pad_cnt = T - len(rewards[i])
 
         #print(np.array([minus_cnt, zero_cnt, plus_cnt, len(demos[i])]))
-        feature_cnts[i,:] = np.array([minus_cnt, zero_cnt, plus_cnt, pad_cnt])  #append +1 for each timestep for bias weight
+        if args.no_term:
+            feature_cnts[i,:] = np.array([minus_cnt, zero_cnt + pad_cnt, plus_cnt])  #append +1 for each timestep for bias weight
+        else:
+            feature_cnts[i,:] = np.array([minus_cnt, zero_cnt, plus_cnt, pad_cnt])  #append +1 for each timestep for bias weight
     return feature_cnts
 
 def get_weight_vector(last_layer):
@@ -433,6 +436,7 @@ if __name__=="__main__":
     parser.add_argument('--debug', help='use fewer demos to speed things up while debugging', action='store_true' )
     parser.add_argument('--plot', help='plot out the feature counts over time for demos', action='store_true' )
     parser.add_argument('--weight_init', help="defaults to randn, specify integer value to start in a corner of L1-sphere", default="randn")
+    parser.add_argument('--no_term', action = 'store_true')
 
     args = parser.parse_args()
     env_name = args.env_name
@@ -486,13 +490,15 @@ if __name__=="__main__":
     sorted_returns = sorted(learning_returns)
     print(sorted_returns)
 
-
-    num_features = 4
+    if args.no_term:
+        num_features = 3
+    else:
+        num_features = 4
     print("reward is linear combination of hard-coded clipped reward features with a padding feature")
 
     demo_cnts = generate_clipped_truncated_feature_counts(demonstrations, learning_rewards, num_features)
     print(demo_cnts)
-    input()
+    #input()
     if args.plot:
         plotable_cnts = demo_cnts
         import matplotlib.pyplot as plt
@@ -522,9 +528,10 @@ if __name__=="__main__":
             if sorted_returns[i] < sorted_returns[j]:
                 pairwise_prefs.append((i,j))
             else: # they are equal
-                print("equal prefs", i, j, sorted_returns[i], sorted_returns[j])
-                pairwise_prefs.append((i,j))
-                pairwise_prefs.append((j,i))
+                pass
+                #print("equal prefs", i, j, sorted_returns[i], sorted_returns[j])
+                #pairwise_prefs.append((i,j))
+                #pairwise_prefs.append((j,i))
     print(pairwise_prefs)
     #input()
     #run random search over weights
