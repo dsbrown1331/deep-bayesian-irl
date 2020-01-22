@@ -216,9 +216,9 @@ class Net(nn.Module):
 
     def reparameterize(self, mu, var): #var is actually the log variance
         if self.training:
-            std = var.mul(0.5).exp().to(device)
+            std = var.mul(0.5).exp()
             eps = self.normal.sample(mu.shape).to(device)
-            return eps.mul(std).add(mu).to(device)
+            return eps.mul(std).add(mu)
         else:
             return mu.to(device)
 
@@ -358,8 +358,8 @@ def learn_reward(reward_network, optimizer, training_inputs, training_outputs, t
 
             actions_1 = reward_network.estimate_inverse_dynamics(mu1[0:-1], mu1[1:])
             actions_2 = reward_network.estimate_inverse_dynamics(mu2[0:-1], mu2[1:])
-            target_actions_1 = torch.LongTensor(actions_i[1:])
-            target_actions_2 = torch.LongTensor(actions_j[1:])
+            target_actions_1 = torch.LongTensor(actions_i[1:]).to(device)
+            target_actions_2 = torch.LongTensor(actions_j[1:]).to(device)
             #print((actions_1, target_actions_1))
             #print((actions_2, target_actions_2))
 
@@ -369,8 +369,8 @@ def learn_reward(reward_network, optimizer, training_inputs, training_outputs, t
             forward_dynamics_distance = 5 #1 if epoch <= 1 else np.random.randint(1, min(1, max(epoch, 4)))
             forward_dynamics_actions1 = target_actions_1
             forward_dynamics_actions2 = target_actions_2
-            forward_dynamics_onehot_actions_1 = torch.zeros((num_frames-1, ACTION_DIMS), dtype=torch.float32)
-            forward_dynamics_onehot_actions_2 = torch.zeros((num_frames-1, ACTION_DIMS), dtype=torch.float32)
+            forward_dynamics_onehot_actions_1 = torch.zeros((num_frames-1, ACTION_DIMS), dtype=torch.float32).to(device)
+            forward_dynamics_onehot_actions_2 = torch.zeros((num_frames-1, ACTION_DIMS), dtype=torch.float32).to(device)
             forward_dynamics_onehot_actions_1.scatter_(1, forward_dynamics_actions1.unsqueeze(1), 1.0)
             forward_dynamics_onehot_actions_2.scatter_(1, forward_dynamics_actions2.unsqueeze(1), 1.0)
 
@@ -385,8 +385,8 @@ def learn_reward(reward_network, optimizer, training_inputs, training_outputs, t
 
             #print("est_dt: " + str(est_dt_i) + ", real_dt: " + str(real_dt_i))
             #print("est_dt: " + str(est_dt_j) + ", real_dt: " + str(real_dt_j))
-            dt_loss_i = temporal_difference_loss(est_dt_i, torch.tensor(((real_dt_i,),), dtype=torch.float32))
-            dt_loss_j = temporal_difference_loss(est_dt_j, torch.tensor(((real_dt_j,),), dtype=torch.float32))
+            dt_loss_i = temporal_difference_loss(est_dt_i, torch.tensor(((real_dt_i,),), dtype=torch.float32).to(device))
+            dt_loss_j = temporal_difference_loss(est_dt_j, torch.tensor(((real_dt_j,),), dtype=torch.float32).to(device))
 
             #trex_loss = loss_criterion(outputs, labels)
 
