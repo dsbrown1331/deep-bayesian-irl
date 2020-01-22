@@ -1,6 +1,7 @@
-./policies/
-./pretrained_networks
-./mcmc_data
+./policies/*
+./pretrained_networks/*
+./mcmc_data/*
+./figs/*
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
