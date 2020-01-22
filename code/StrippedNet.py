@@ -1,15 +1,14 @@
 #----------------------------------------------------------------------------------------
 # Argument parsing
-# import sys
-# if len(sys.argv) < 2:
-#     print("Usage: " + sys.argv[0] + " <model_path>")
-#     sys.exit()
-# model_path = sys.argv[1].strip()
+import sys
+if len(sys.argv) < 2:
+    print("Usage: " + sys.argv[0] + " <model_path>")
+    sys.exit()
+model_path = sys.argv[1].strip()
 
 # Long imports
 import torch
 import torch.nn as nn
-import torch.nn.functional as F
 #----------------------------------------------------------------------------------------
 
 # Arbitrarily chosen number of dimensions in latent space
@@ -18,8 +17,6 @@ ENCODING_DIMS = 30
 class Net(nn.Module):
     def __init__(self):
         super().__init__()
-
-        self.device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
         self.conv1 = nn.Conv2d(4, 16, 7, stride=3)
         self.conv2 = nn.Conv2d(16, 16, 5, stride=2)
@@ -59,7 +56,7 @@ class Net(nn.Module):
         r = self.fc2(mu)
         sum_rewards += torch.sum(r)
         sum_abs_rewards += torch.sum(torch.abs(r))
-        return sum_rewards#, sum_abs_rewards, mu
+        return sum_rewards, sum_abs_rewards, mu
 
     def forward(self, traj_i, traj_j):
         '''compute cumulative return for each trajectory and return logits'''
@@ -67,39 +64,5 @@ class Net(nn.Module):
         cum_r_j, abs_r_j, mu2 = self.cum_return(traj_j)
         return torch.cat((cum_r_i.unsqueeze(0), cum_r_j.unsqueeze(0)),0), abs_r_i + abs_r_j, mu1, mu2
 
-
-    def state_features(self, traj):
-
-        with torch.no_grad():
-            accum = torch.zeros(1,ENCODING_DIMS).float().to(self.device)
-            for x in traj:
-                x = x.permute(0,3,1,2) #get into NCHW format
-                #compute forward pass of reward network
-                x = F.leaky_relu(self.conv1(x))
-                x = F.leaky_relu(self.conv2(x))
-                x = F.leaky_relu(self.conv3(x))
-                x = F.leaky_relu(self.conv4(x))
-                x = x.view(-1, 784)
-                x = F.leaky_relu(self.fc1(x))
-                mu = self.fc_mu(x)
-                accum.add_(mu)
-                #print(accum)
-        return accum
-
-    def state_feature(self, obs):
-        with torch.no_grad():
-            x = obs.permute(0,3,1,2) #get into NCHW format
-            #compute forward pass of reward network
-            x = F.leaky_relu(self.conv1(x))
-            x = F.leaky_relu(self.conv2(x))
-            x = F.leaky_relu(self.conv3(x))
-            x = F.leaky_relu(self.conv4(x))
-            x = x.view(-1, 784)
-            x = F.leaky_relu(self.fc1(x))
-            mu = self.fc_mu(x)
-
-        return mu
-
-### Usage example
-#net = Net()
-#net.load_state_dict(torch.load(model_path))
+net = Net()
+net.load_state_dict(torch.load(model_path))

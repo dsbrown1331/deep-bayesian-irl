@@ -6,8 +6,7 @@ import gym
 from gym import wrappers, logger
 import tensorflow as tf
 
-sys.path.insert(0,'./baselines/')
-print(sys.path)
+sys.path.append('./baselines/')
 from baselines.ppo2.model import Model
 from baselines.common.policies import build_policy
 from baselines.common.cmd_util import make_vec_env
@@ -49,6 +48,69 @@ class PPO2Agent(object):
             a = self.model.act_model.act(observation)
         return a
 
+class PPO2Agent2(object):
+    def __init__(self, env, env_type, stochastic=False, gpu=True):
+        from baselines.common.policies import build_policy
+        from baselines.ppo2.model import Model
+
+        self.graph = tf.Graph()
+
+        if gpu:
+            config = tf.ConfigProto()
+            config.gpu_options.allow_growth = True
+        else:
+            config = tf.ConfigProto(device_count = {'GPU': 0})
+
+        self.sess = tf.Session(graph=self.graph,config=config)
+
+        with self.graph.as_default():
+            with self.sess.as_default():
+                ob_space = env.observation_space
+                ac_space = env.action_space
+
+                if env_type == 'atari':
+                    policy = build_policy(env,'cnn')
+                elif env_type == 'mujoco':
+                    policy = build_policy(env,'mlp')
+                else:
+                    assert False,' not supported env_type'
+
+                make_model = lambda : Model(policy=policy, ob_space=ob_space, ac_space=ac_space, nbatch_act=1, nbatch_train=1,
+                                nsteps=1, ent_coef=0., vf_coef=0.,
+                                max_grad_norm=0.)
+                self.model = make_model()
+
+
+                #self.model.load(path)
+
+        if env_type == 'mujoco':
+            with open(path+'.env_stat.pkl', 'rb') as f :
+                import pickle
+                s = pickle.load(f)
+            self.ob_rms = s['ob_rms']
+            self.ret_rms = s['ret_rms']
+            self.clipob = 10.
+            self.epsilon = 1e-8
+        else:
+            self.ob_rms = None
+
+        self.stochastic = stochastic
+
+    def load(self, path):
+        self.model_path = path
+        self.model.load(path)
+
+    def act(self, obs, reward, done):
+        if self.ob_rms:
+            obs = np.clip((obs - self.ob_rms.mean) / np.sqrt(self.ob_rms.var + self.epsilon), -self.clipob, self.clipob)
+
+        with self.graph.as_default():
+            with self.sess.as_default():
+                if self.stochastic:
+                    a,v,state,neglogp = self.model.step(obs)
+                else:
+                    a = self.model.act_model.act(obs)
+        return a
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description=None)
@@ -58,7 +120,7 @@ if __name__ == '__main__':
     parser.add_argument('--episode_count', default=100)
     parser.add_argument('--record_video', action='store_true')
     parser.add_argument('--render', action='store_true')
-
+    
     args = parser.parse_args()
 
     stochastic = True #it helps Atari policies to not get stuck if there is a little noise

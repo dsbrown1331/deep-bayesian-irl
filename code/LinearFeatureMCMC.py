@@ -339,14 +339,22 @@ def write_weights_likelihood(last_layer, loglik, file_writer):
         file_writer.write(str(w)+",")
     file_writer.write(str(loglik.item()) + "\n")
 
+print("---------------------------")
+print("WARNING: Computing L2 NORM!")
+print("---------------------------")
 def compute_l1(last_layer):
     linear, bias = list(last_layer.parameters())
+    #print("yeehaw")
     #print(linear)
+    #print(torch.norm(linear, p=2))
     #print(bias)
-    with torch.no_grad():
-        weights = torch.cat((linear.squeeze(), bias)).cpu().numpy()
+    
+    
+    #with torch.no_grad():
+    #    weights = torch.cat((linear.squeeze(), bias)).cpu().numpy()
     #print("output", np.sum(np.abs(weights)))
-    return np.sum(np.abs(weights))
+    with torch.no_grad():
+        return torch.norm(linear, p=2).numpy() #np.sum(np.abs(weights))
 
 def mcmc_map_search(reward_net, demonstrations, pairwise_prefs, demo_cnts, num_steps, step_stdev, weight_output_filename, weight_init):
     '''run metropolis hastings MCMC and record weights in chain'''
