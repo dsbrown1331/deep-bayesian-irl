@@ -110,7 +110,7 @@ if __name__=="__main__":
     #parser.add_argument('--checkpointpath', default='', help='path to checkpoint to run eval on')
     #parser.add_argument('--pretrained_network', help='path to pretrained network weights to form \phi(s) using all but last layer')
     parser.add_argument('--num_rollouts', type=int, help='number of rollouts to compute feature counts')
-    parser.add_argument('--add_bias', action='store_false')
+    parser.add_argument('--add_bias', action='store_true')
     #parser.add_argument('--output_id', default='', help='unique id for output file name')
 
 
@@ -146,7 +146,7 @@ if __name__=="__main__":
     returns, ave_feature_counts = get_policy_feature_counts(env_name, checkpointpath, feature_net, args.num_rollouts, args.add_bias)
     print("returns", returns)
     print("feature counts", ave_feature_counts)
-    writer = open("../policies/" + env_name + "_" + output_id + "_fcounts_" + str(args.num_rollouts) + ".txt", 'w')
+    writer = open("../policies/" + env_name + "_" + output_id + "_fcounts_" + str(args.num_rollouts) +"_bias" + str(args.add_bias) +  ".txt", 'w')
     utils.write_line(ave_feature_counts, writer)
     utils.write_line(returns, writer, newline=False)
     writer.close()

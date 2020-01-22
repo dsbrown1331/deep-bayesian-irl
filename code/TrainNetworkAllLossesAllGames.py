@@ -24,7 +24,7 @@ import os
 
 def generate_novice_demos(env, env_name, agent, model_dir):
     checkpoint_min = 50
-    checkpoint_max = 600
+    checkpoint_max = 100
     checkpoint_step = 50
     checkpoints = []
     if env_name == "enduro":
@@ -216,11 +216,11 @@ class Net(nn.Module):
 
     def reparameterize(self, mu, var): #var is actually the log variance
         if self.training:
-            std = var.mul(0.5).exp()
-            eps = self.normal.sample(mu.shape)
-            return eps.mul(std).add(mu)
+            std = var.mul(0.5).exp().to(device)
+            eps = self.normal.sample(mu.shape).to(device)
+            return eps.mul(std).add(mu).to(device)
         else:
-            return mu
+            return mu.to(device)
 
 
     def cum_return(self, traj):
