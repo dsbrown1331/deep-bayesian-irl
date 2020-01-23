@@ -19,7 +19,7 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 from run_test import *
-from StrippedNet import Net
+from StrippedNet import EmbeddingNet
 from baselines.common.trex_utils import preprocess
 
 
@@ -459,18 +459,22 @@ def mcmc_map_search(reward_net, demonstrations, pairwise_prefs, demo_cnts, num_s
 if __name__=="__main__":
     parser = argparse.ArgumentParser(description=None)
     parser.add_argument('--env_name', default='', help='Select the environment name to run, i.e. pong')
-    parser.add_argument('--map_reward_model_path', default='', help="name and location for learned model params, e.g. ./learned_models/breakout.params")
+    parser.add_argument('--map_reward_model_path', default='', help="name and location for learned model params, e.g. ../mcmc_data/breakout_map.params")
     parser.add_argument('--seed', default=0, help="random seed for experiments")
     parser.add_argument('--models_dir', default = ".", help="path to directory that contains checkpoint models for demos are stored")
     parser.add_argument('--num_mcmc_steps', default=2000, type = int, help="number of proposals to generate for MCMC")
-    parser.add_argument('--mcmc_step_size', default = 0.05, type=float, help="proposal step is gaussian with zero mean and mcmc_step_size stdev")
+    parser.add_argument('--mcmc_step_size', default = 0.001, type=float, help="proposal step is gaussian with zero mean and mcmc_step_size stdev")
     parser.add_argument('--pretrained_network', help='path to pretrained network weights to form \phi(s) using all but last layer')
     parser.add_argument('--weight_outputfile', help='filename including path to write the chain to')
     parser.add_argument('--debug', help='use fewer demos to speed things up while debugging', action='store_true' )
     parser.add_argument('--plot', help='plot out the feature counts over time for demos', action='store_true' )
     parser.add_argument('--weight_init', help="defaults to randn, specify integer value to start in a corner of L1-sphere", default="randn")
+    parser.add_argument('--encoding_dims', help="size of latent space", type=int)
 
     args = parser.parse_args()
+
+    ENCODING_DIMS = args.encoding_dims
+
     env_name = args.env_name
     if env_name == "spaceinvaders":
         env_id = "SpaceInvadersNoFrameskip-v4"
@@ -526,8 +530,8 @@ if __name__=="__main__":
     # Now we download a pretrained network to form \phi(s) the state features where the reward is now w^T \phi(s)
 
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
-    reward_net = Net()
-    reward_net.load_state_dict(torch.load(args.pretrained_network))
+    reward_net = EmbeddingNet(ENCODING_DIMS)
+    reward_net.load_state_dict(torch.load(args.pretrained_network, map_location=device))
     #reinitialize last layer
     num_features = reward_net.fc2.in_features
 
@@ -580,7 +584,7 @@ if __name__=="__main__":
     #best_reward = random_search(reward_net, demonstrations, 40, stdev = 0.01)
     best_reward_lastlayer = mcmc_map_search(reward_net, demonstrations, pairwise_prefs, demo_cnts, args.num_mcmc_steps, args.mcmc_step_size, args.weight_outputfile, args.weight_init)
     #turn this into a full network
-    best_reward = Net()
+    best_reward = EmbeddingNet(ENCODING_DIMS)
     best_reward.load_state_dict(torch.load(args.pretrained_network))
     best_reward.fc2 = best_reward_lastlayer
     best_reward.to(device)

@@ -13,22 +13,22 @@ import torch.nn.functional as F
 #----------------------------------------------------------------------------------------
 
 # Arbitrarily chosen number of dimensions in latent space
-ENCODING_DIMS = 30
+#ENCODING_DIMS = 30
 
-class Net(nn.Module):
-    def __init__(self):
+class EmbeddingNet(nn.Module):
+    def __init__(self, ENCODING_DIMS):
         super().__init__()
 
         self.device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
-
+        self.ENCODING_DIMS = ENCODING_DIMS
         self.conv1 = nn.Conv2d(4, 16, 7, stride=3)
         self.conv2 = nn.Conv2d(16, 16, 5, stride=2)
         self.conv3 = nn.Conv2d(16, 16, 3, stride=1)
         self.conv4 = nn.Conv2d(16, 16, 3, stride=1)
 
         # This is the width of the layer between the convolved framestack
-        # and the actual latent space. Scales with ENCODING_DIMS
-        intermediate_dimension = min(784, max(64, ENCODING_DIMS*2))
+        # and the actual latent space. Scales with self.ENCODING_DIMS
+        intermediate_dimension = min(784, max(64, self.ENCODING_DIMS*2))
 
         # Brings the convolved frame down to intermediate dimension just
         # before being sent to latent space
@@ -37,10 +37,10 @@ class Net(nn.Module):
         # This brings from intermediate dimension to latent space. Named mu
         # because in the full network it includes a var also, to sample for
         # the autoencoder
-        self.fc_mu = nn.Linear(intermediate_dimension, ENCODING_DIMS)
+        self.fc_mu = nn.Linear(intermediate_dimension, self.ENCODING_DIMS)
 
-        # This is the actual T-REX layer; linear comb. from ENCODING_DIMS
-        self.fc2 = nn.Linear(ENCODING_DIMS, 1)
+        # This is the actual T-REX layer; linear comb. from self.ENCODING_DIMS
+        self.fc2 = nn.Linear(self.ENCODING_DIMS, 1)
 
     def cum_return(self, traj):
         '''calculate cumulative return of trajectory'''
@@ -71,7 +71,7 @@ class Net(nn.Module):
     def state_features(self, traj):
 
         with torch.no_grad():
-            accum = torch.zeros(1,ENCODING_DIMS).float().to(self.device)
+            accum = torch.zeros(1,self.ENCODING_DIMS).float().to(self.device)
             for x in traj:
                 x = x.permute(0,3,1,2) #get into NCHW format
                 #compute forward pass of reward network
