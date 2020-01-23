@@ -24,7 +24,7 @@ import os
 
 def generate_novice_demos(env, env_name, agent, model_dir):
     checkpoint_min = 50
-    checkpoint_max = 100
+    checkpoint_max = 600
     checkpoint_step = 50
     checkpoints = []
     if env_name == "enduro":

@@ -13,5 +13,5 @@ do
   ending="_stripped.params"
   new=$i$ending
   echo "distilling $orig --> $new"
-  echo `python ../transfer.py $1$orig $1$new $3`
+  echo `python ../transfer.py $orig $new $3`
 done
