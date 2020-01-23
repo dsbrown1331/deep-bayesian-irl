@@ -13,7 +13,7 @@ import torch
 from run_test import *
 #import matplotlib.pylab as plt
 import argparse
-import StrippedNet
+from StrippedNet import EmbeddingNet
 from baselines.common.trex_utils import preprocess
 import utils
 
@@ -109,10 +109,10 @@ if __name__=="__main__":
     parser.add_argument('--env_name', default='', help='Select the environment name to run, i.e. pong')
     parser.add_argument('--output_id', help="either map or mean or number of checkpoint")
     #parser.add_argument('--checkpointpath', default='', help='path to checkpoint to run eval on')
-    parser.add_argument('--pretrained_network', help='path to pretrained network weights to form \phi(s) using all but last layer')
+    parser.add_argument('--pretrained_network_dir', help='path to directory of pretrained network weights to form \phi(s) using all but last layer')
     parser.add_argument('--num_rollouts', type=int, help='number of rollouts to compute feature counts')
-    #parser.add_argument('--output_id', default='', help='unique id for output file name')
-
+    parser.add_argument('--postfix', default='', help='postfix of network files, all are assumed to be of form "[env_name]postfix" and are located in the pretrained_network_dir')
+    parser.add_argument('--encoding_dims', type=int, help='number of dims to encode to')
 
     args = parser.parse_args()
     env_name = args.env_name
@@ -127,9 +127,11 @@ if __name__=="__main__":
     np.random.seed(seed)
     tf.set_random_seed(seed)
 
+    network_file_loc = os.path.abspath(os.path.join(args.pretrained_network_dir, args.env_name + args.postfix))
+    print("Using network at", network_file_loc, "for features.")
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
-    feature_net = StrippedNet.Net()
-    feature_net.load_state_dict(torch.load(args.pretrained_network))
+    feature_net = EmbeddingNet(args.encoding_dims)
+    feature_net.load_state_dict(torch.load(network_file_loc))
     feature_net.to(device)
 
     if output_id == 'mean' or output_id == 'map':
@@ -142,7 +144,7 @@ if __name__=="__main__":
     returns, ave_feature_counts = get_policy_feature_counts(env_name, checkpointpath, feature_net, args.num_rollouts)
     print("returns", returns)
     print("feature counts", ave_feature_counts)
-    writer = open("../policies/" + env_name + "_" + output_id + "_fcounts_auxiliary.txt", 'w')
+    writer = open("../policies/" + env_name + "_" + output_id + args.postfix + "_fcounts_auxiliary.txt", 'w')
     utils.write_line(ave_feature_counts, writer)
     utils.write_line(returns, writer, newline=False)
     writer.close()
