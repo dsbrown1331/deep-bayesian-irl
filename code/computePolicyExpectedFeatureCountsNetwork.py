@@ -113,6 +113,7 @@ if __name__=="__main__":
     parser.add_argument('--num_rollouts', type=int, help='number of rollouts to compute feature counts')
     parser.add_argument('--postfix', default='', help='postfix of network files, all are assumed to be of form "[env_name]postfix" and are located in the pretrained_network_dir')
     parser.add_argument('--encoding_dims', type=int, help='number of dims to encode to')
+    parser.add_argument('--fcount_dir', help='directory to save fcount file')
 
     args = parser.parse_args()
     env_name = args.env_name
@@ -144,7 +145,7 @@ if __name__=="__main__":
     returns, ave_feature_counts = get_policy_feature_counts(env_name, checkpointpath, feature_net, args.num_rollouts)
     print("returns", returns)
     print("feature counts", ave_feature_counts)
-    writer = open("../policies/" + env_name + "_" + output_id + args.postfix + "_fcounts_auxiliary.txt", 'w')
+    writer = open(args.fcount_dir + env_name + "_" + output_id + args.postfix + "_fcounts_auxiliary.txt", 'w')
     utils.write_line(ave_feature_counts, writer)
     utils.write_line(returns, writer, newline=False)
     writer.close()
