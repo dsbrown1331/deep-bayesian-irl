@@ -55,8 +55,8 @@ def generate_debug_demos(env, env_name, agent, model_dir):
     for checkpoint in checkpoints:
 
         model_path = model_dir + env_name + "_25/" + checkpoint
-        if env_name == "seaquest":
-            model_path = model_dir + env_name + "_5/" + checkpoint
+        #if env_name == "seaquest":
+#            model_path = model_dir + env_name + "_5/" + checkpoint
 
         agent.load(model_path)
         episode_count = 1
@@ -130,8 +130,8 @@ def generate_novice_demos(env, env_name, agent, model_dir):
     for checkpoint in checkpoints:
 
         model_path = model_dir + env_name + "_25/" + checkpoint
-        if env_name == "seaquest":
-            model_path = model_dir + env_name + "_5/" + checkpoint
+        #if env_name == "seaquest":
+        #    model_path = model_dir + env_name + "_5/" + checkpoint
 
         agent.load(model_path)
         #episode_count = 1
