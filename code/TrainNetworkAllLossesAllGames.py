@@ -23,17 +23,25 @@ from baselines.common.trex_utils import preprocess
 import os
 
 def generate_novice_demos(env, env_name, agent, model_dir):
+    episode_count = 1
     checkpoint_min = 50
-    checkpoint_max = 600
+    checkpoint_max = 1200
     checkpoint_step = 50
     checkpoints = []
     if env_name == "enduro":
-        checkpoint_min = 3100
-        checkpoint_max = 3650
+        episode_count = 2
+        checkpoint_min = 3750
+        checkpoint_max = 4850
+        checkpoint_step = 100
     elif env_name == "seaquest":
-        checkpoint_min = 10
-        checkpoint_max = 65
-        checkpoint_step = 5
+        checkpoint_min = 25
+        checkpoint_max = 600
+        checkpoint_step = 25
+    elif env_name == "breakout":
+        checkpoint_min = 150
+        checkoint_max = 1250
+        checkpoint_step = 100
+        episode_count = 2
     for i in range(checkpoint_min, checkpoint_max + checkpoint_step, checkpoint_step):
         if i < 10:
             checkpoints.append('0000' + str(i))
@@ -53,11 +61,11 @@ def generate_novice_demos(env, env_name, agent, model_dir):
     for checkpoint in checkpoints:
 
         model_path = model_dir + "/models/" + env_name + "_25/" + checkpoint
-        if env_name == "seaquest":
-            model_path = model_dir + "/models/" + env_name + "_5/" + checkpoint
+    #    if env_name == "seaquest":
+    #        model_path = model_dir + "/models/" + env_name + "_5/" + checkpoint
 
         agent.load(model_path)
-        episode_count = 1
+        #episode_count = 1
         for i in range(episode_count):
             done = False
             traj = []
@@ -175,7 +183,7 @@ def create_training_data(demonstrations, num_trajs, num_snippets, min_snippet_le
             print("---------LENGTH MISMATCH!------")
         training_obs.append((traj_i, traj_j))
         training_labels.append(label)
-        times.append((list(range(ti_start, ti_start+rand_length, 1)), list(range(tj_start, tj_start+rand_length, 1))))
+        times.append((list(range(ti_start, ti_start+rand_length, 1)), list(range(tj_start, tj_start+rand_length, 1))))  
         actions.append((traj_i_actions, traj_j_actions))
 
     print("maximum traj length", max_traj_length)
@@ -273,7 +281,7 @@ class Net(nn.Module):
         x = F.leaky_relu(self.reconstruct_conv1(x))
         #print(x.shape)
         x = F.leaky_relu(self.reconstruct_conv2(x))
-        #print(x.shape)
+        #print(x.shape) 
         x = F.leaky_relu(self.reconstruct_conv3(x))
         #print(x.shape)
         x = self.sigmoid(self.reconstruct_conv4(x))
@@ -388,11 +396,11 @@ def learn_reward(reward_network, optimizer, training_inputs, training_outputs, t
             dt_loss_i = temporal_difference_loss(est_dt_i, torch.tensor(((real_dt_i,),), dtype=torch.float32).to(device))
             dt_loss_j = temporal_difference_loss(est_dt_j, torch.tensor(((real_dt_j,),), dtype=torch.float32).to(device))
 
-            #trex_loss = loss_criterion(outputs, labels)
+            trex_loss = loss_criterion(outputs, labels)
 
             # MODIFY THIS
             ###DB: loss = reconstruction_loss_1 + reconstruction_loss_2 + dt_loss_i + dt_loss_j + inverse_dynamics_loss_1 + inverse_dynamics_loss_2 + forward_dynamics_loss_1 + forward_dynamics_loss_2
-            loss = dt_loss_i + dt_loss_j + inverse_dynamics_loss_1 + inverse_dynamics_loss_2 + forward_dynamics_loss_1 + forward_dynamics_loss_2 ###DB: no reconstruction
+            loss = dt_loss_i + dt_loss_j + inverse_dynamics_loss_1 + inverse_dynamics_loss_2 + forward_dynamics_loss_1 + forward_dynamics_loss_2 + trex_loss ###DB: no reconstruction
             # can add + trex_loss if you want to add that in too
             #TODO add l2 reg
 
