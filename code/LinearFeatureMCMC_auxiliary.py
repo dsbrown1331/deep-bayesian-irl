@@ -25,6 +25,73 @@ from baselines.common.trex_utils import preprocess
 
 
 def generate_debug_demos(env, env_name, agent, model_dir):
+    checkpoint_min = 200 #50
+    checkpoint_max = 600
+    checkpoint_step = 200 #50
+    checkpoints = []
+    if env_name == "enduro":
+        checkpoint_min = 3100
+        checkpoint_max = 3650
+    elif env_name == "seaquest":
+        checkpoint_min = 10
+        checkpoint_max = 65
+        checkpoint_step = 5
+    for i in range(checkpoint_min, checkpoint_max + checkpoint_step, checkpoint_step):
+        if i < 10:
+            checkpoints.append('0000' + str(i))
+        elif i < 100:
+            checkpoints.append('000' + str(i))
+        elif i < 1000:
+            checkpoints.append('00' + str(i))
+        elif i < 10000:
+            checkpoints.append('0' + str(i))
+    print(checkpoints)
+
+
+
+    demonstrations = []
+    learning_returns = []
+    learning_rewards = []
+    for checkpoint in checkpoints:
+
+        model_path = model_dir + env_name + "_25/" + checkpoint
+        if env_name == "seaquest":
+            model_path = model_dir + env_name + "_5/" + checkpoint
+
+        agent.load(model_path)
+        episode_count = 1
+        for i in range(episode_count):
+            done = False
+            traj = []
+            gt_rewards = []
+            r = 0
+
+            ob = env.reset()
+            steps = 0
+            acc_reward = 0
+            while True:
+                action = agent.act(ob, r, done)
+                ob, r, done, _ = env.step(action)
+                ob_processed = preprocess(ob, env_name)
+                #ob_processed = ob_processed[0] #get rid of first dimension ob.shape = (1,84,84,4)
+                traj.append(ob_processed)
+
+                gt_rewards.append(r[0])
+                steps += 1
+                acc_reward += r[0]
+                if done:
+                    print("checkpoint: {}, steps: {}, return: {}".format(checkpoint, steps,acc_reward))
+                    break
+            print("traj length", len(traj))
+            print("demo length", len(demonstrations))
+            demonstrations.append(traj)
+            learning_returns.append(acc_reward)
+            learning_rewards.append(gt_rewards)
+
+    return demonstrations, learning_returns, learning_rewards
+
+
+def generate_novice_demos(env, env_name, agent, model_dir):
     episode_count = 1
     checkpoint_min = 50
     checkpoint_max = 1200
@@ -68,73 +135,6 @@ def generate_debug_demos(env, env_name, agent, model_dir):
 
         agent.load(model_path)
         #episode_count = 1
-        for i in range(episode_count):
-            done = False
-            traj = []
-            gt_rewards = []
-            r = 0
-
-            ob = env.reset()
-            steps = 0
-            acc_reward = 0
-            while True:
-                action = agent.act(ob, r, done)
-                ob, r, done, _ = env.step(action)
-                ob_processed = preprocess(ob, env_name)
-                #ob_processed = ob_processed[0] #get rid of first dimension ob.shape = (1,84,84,4)
-                traj.append(ob_processed)
-
-                gt_rewards.append(r[0])
-                steps += 1
-                acc_reward += r[0]
-                if done:
-                    print("checkpoint: {}, steps: {}, return: {}".format(checkpoint, steps,acc_reward))
-                    break
-            print("traj length", len(traj))
-            print("demo length", len(demonstrations))
-            demonstrations.append(traj)
-            learning_returns.append(acc_reward)
-            learning_rewards.append(gt_rewards)
-
-    return demonstrations, learning_returns, learning_rewards
-
-
-def generate_novice_demos(env, env_name, agent, model_dir):
-    checkpoint_min = 50 #50
-    checkpoint_max = 100
-    checkpoint_step = 50 #50
-    checkpoints = []
-    if env_name == "enduro":
-        checkpoint_min = 3100
-        checkpoint_max = 3650
-    elif env_name == "seaquest":
-        checkpoint_min = 10
-        checkpoint_max = 65
-        checkpoint_step = 5
-    for i in range(checkpoint_min, checkpoint_max + checkpoint_step, checkpoint_step):
-        if i < 10:
-            checkpoints.append('0000' + str(i))
-        elif i < 100:
-            checkpoints.append('000' + str(i))
-        elif i < 1000:
-            checkpoints.append('00' + str(i))
-        elif i < 10000:
-            checkpoints.append('0' + str(i))
-    print(checkpoints)
-
-
-
-    demonstrations = []
-    learning_returns = []
-    learning_rewards = []
-    for checkpoint in checkpoints:
-
-        model_path = model_dir + env_name + "_25/" + checkpoint
-        if env_name == "seaquest":
-            model_path = model_dir + env_name + "_5/" + checkpoint
-
-        agent.load(model_path)
-        episode_count = 1
         for i in range(episode_count):
             done = False
             traj = []
