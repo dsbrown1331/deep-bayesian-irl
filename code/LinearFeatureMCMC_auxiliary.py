@@ -93,7 +93,7 @@ def generate_debug_demos(env, env_name, agent, model_dir):
 
 def generate_novice_demos(env, env_name, agent, model_dir):
     checkpoint_min = 50 #50
-    checkpoint_max = 600
+    checkpoint_max = 1200
     checkpoint_step = 50 #50
     checkpoints = []
     if env_name == "enduro":
@@ -307,6 +307,16 @@ def compute_l1(last_layer):
     #print("output", np.sum(np.abs(weights)))
     return np.sum(np.abs(weights))
 
+def compute_l2(last_layer):
+    linear = last_layer.weight.data
+    #print(linear)
+    #print(bias)
+    with torch.no_grad():
+        weights = linear.squeeze().cpu().numpy()
+    #print("output", np.sum(np.abs(weights)))
+    return np.linalg.norm(weights)
+
+
 def mcmc_map_search(reward_net, demonstrations, pairwise_prefs, demo_cnts, num_steps, step_stdev, weight_output_filename, weight_init):
     '''run metropolis hastings MCMC and record weights in chain'''
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
@@ -355,15 +365,15 @@ def mcmc_map_search(reward_net, demonstrations, pairwise_prefs, demo_cnts, num_s
         sys.exit()
 
     #normalize the weight vector to have unit 1-norm...why not unit 2-norm, WCFB won't work without expert...I guess we could do D-REX and estimate
-    l1_norm = np.array([compute_l1(last_layer)])
+    l2_norm = np.array([compute_l2(last_layer)])
 
     with torch.no_grad():
         linear = last_layer.weight.data
         print(last_layer.parameters())
-        linear.div_(torch.from_numpy(l1_norm).float().to(device))
+        linear.div_(torch.from_numpy(l2_norm).float().to(device))
 
     if args.debug:
-        print("normalized last layer", compute_l1(last_layer))
+        print("normalized last layer", compute_l2(last_layer))
         print("weights", get_weight_vector(last_layer))
 
     #import time
@@ -397,13 +407,13 @@ def mcmc_map_search(reward_net, demonstrations, pairwise_prefs, demo_cnts, num_s
         with torch.no_grad():
             for param in proposal_reward.parameters():
                 param.add_(torch.randn(param.size()).to(device) * step_stdev)
-        l1_norm = np.array([compute_l1(proposal_reward)])
+        l2_norm = np.array([compute_l2(proposal_reward)])
         #normalize the weight vector...
         with torch.no_grad():
             for param in proposal_reward.parameters():
-                param.div_(torch.from_numpy(l1_norm).float().to(device))
+                param.div_(torch.from_numpy(l2_norm).float().to(device))
         if args.debug:
-            print("normalized last layer", compute_l1(proposal_reward))
+            print("normalized last layer", compute_l2(proposal_reward))
         #debugging info
         #print_traj_returns(proposal_reward, demonstrations)
         #calculate prob of proposal
@@ -473,7 +483,6 @@ if __name__=="__main__":
 
     args = parser.parse_args()
 
-    ENCODING_DIMS = args.encoding_dims
 
     env_name = args.env_name
     if env_name == "spaceinvaders":
@@ -530,7 +539,7 @@ if __name__=="__main__":
     # Now we download a pretrained network to form \phi(s) the state features where the reward is now w^T \phi(s)
 
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
-    reward_net = EmbeddingNet(ENCODING_DIMS)
+    reward_net = EmbeddingNet(args.encoding_dims)
     reward_net.load_state_dict(torch.load(args.pretrained_network, map_location=device))
     #reinitialize last layer
     num_features = reward_net.fc2.in_features
@@ -584,8 +593,8 @@ if __name__=="__main__":
     #best_reward = random_search(reward_net, demonstrations, 40, stdev = 0.01)
     best_reward_lastlayer = mcmc_map_search(reward_net, demonstrations, pairwise_prefs, demo_cnts, args.num_mcmc_steps, args.mcmc_step_size, args.weight_outputfile, args.weight_init)
     #turn this into a full network
-    best_reward = EmbeddingNet(ENCODING_DIMS)
-    best_reward.load_state_dict(torch.load(args.pretrained_network))
+    best_reward = EmbeddingNet(args.encoding_dims)
+    best_reward.load_state_dict(torch.load(args.pretrained_network, map_location=device))
     best_reward.fc2 = best_reward_lastlayer
     best_reward.to(device)
     #save best reward network

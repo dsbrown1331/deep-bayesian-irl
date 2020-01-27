@@ -20,7 +20,7 @@ import utils
 
 
 
-def get_policy_feature_counts(env_name, checkpointpath, feature_net, num_rollouts):
+def get_policy_feature_counts(env_name, checkpointpath, feature_net, num_rollouts, no_op=False):
     if env_name == "spaceinvaders":
         env_id = "SpaceInvadersNoFrameskip-v4"
     elif env_name == "mspacman":
@@ -55,9 +55,9 @@ def get_policy_feature_counts(env_name, checkpointpath, feature_net, num_rollout
 
     learning_returns = []
 
-    print(checkpointpath)
-
-    agent.load(checkpointpath)
+    print("using checkpoint", checkpointpath, "if none then using no-op policy")
+    if not no_op:
+        agent.load(checkpointpath)
     episode_count = num_rollouts
 
     f_counts = np.zeros(feature_net.fc2.in_features)
@@ -73,7 +73,10 @@ def get_policy_feature_counts(env_name, checkpointpath, feature_net, num_rollout
         steps = 0
         acc_reward = 0
         while True:
-            action = agent.act(ob, r, done)
+            if no_op:
+                action = 0
+            else:
+                action = agent.act(ob, r, done)
             #print(action)
             ob, r, done, _ = env.step(action)
             ob_processed = preprocess(ob, env_name)
@@ -114,6 +117,7 @@ if __name__=="__main__":
     parser.add_argument('--postfix', default='', help='postfix of network files, all are assumed to be of form "[env_name]postfix" and are located in the pretrained_network_dir')
     parser.add_argument('--encoding_dims', type=int, help='number of dims to encode to')
     parser.add_argument('--fcount_dir', help='directory to save fcount file')
+    parser.add_argument('--no_op', action='store_true', help='run no-op policy')
 
     args = parser.parse_args()
     env_name = args.env_name
@@ -132,17 +136,19 @@ if __name__=="__main__":
     print("Using network at", network_file_loc, "for features.")
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
     feature_net = EmbeddingNet(args.encoding_dims)
-    feature_net.load_state_dict(torch.load(network_file_loc))
+    feature_net.load_state_dict(torch.load(network_file_loc, map_location=device))
     feature_net.to(device)
 
-    if output_id == 'mean' or output_id == 'map':
+    if args.no_op:
+        checkpointpath = None
+    elif output_id == 'mean' or output_id == 'map':
         checkpointpath = '/scratch/cluster/dsbrown/tflogs/mcmc/' + env_name + '_linear_' + output_id + '_0/checkpoints/43000'
     else:
         checkpointpath = '/scratch/cluster/dsbrown/models/' + env_name + '_25/' + output_id
     print("*"*10)
     print(env_name)
     print("*"*10)
-    returns, ave_feature_counts = get_policy_feature_counts(env_name, checkpointpath, feature_net, args.num_rollouts)
+    returns, ave_feature_counts = get_policy_feature_counts(env_name, checkpointpath, feature_net, args.num_rollouts, args.no_op)
     print("returns", returns)
     print("feature counts", ave_feature_counts)
     writer = open(args.fcount_dir + env_name + "_" + output_id + args.postfix + "_fcounts_auxiliary.txt", 'w')

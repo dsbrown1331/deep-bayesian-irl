@@ -21,13 +21,12 @@ for i,ll in enumerate(log_lik):
         best_w = W[i]
 print("MAP w")
 print(best_w)
-print()
 
 
 #debuggin code to try and inspect the MCMC chain to debug the noop policy for breakout
 print(W.shape)
 import matplotlib.pyplot as plt
 plt.figure()
-plt.plot(W[:,7])
+plt.plot(W)
 plt.legend()
 plt.show()
