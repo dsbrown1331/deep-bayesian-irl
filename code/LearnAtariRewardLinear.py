@@ -59,7 +59,7 @@ def generate_novice_demos(env, env_name, agent, model_dir):
             model_path = model_dir + "/models/" + env_name + "_5/" + checkpoint
 
         agent.load(model_path)
-        episode_count = 1
+        episode_count = 30
         for i in range(episode_count):
             done = False
             traj = []
