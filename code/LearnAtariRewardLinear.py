@@ -190,25 +190,25 @@ class Net(nn.Module):
         super().__init__()
 
         self.conv1 = nn.Conv2d(4, 16, 7, stride=3)
-        self.conv2 = nn.Conv2d(16, 16, 5, stride=2)
-        self.conv3 = nn.Conv2d(16, 16, 3, stride=1)
-        self.conv4 = nn.Conv2d(16, 16, 3, stride=1)
+        self.conv2 = nn.Conv2d(16, 32, 5, stride=2)
+        self.conv3 = nn.Conv2d(32, 32, 3, stride=1)
+        self.conv4 = nn.Conv2d(32, 16, 3, stride=1)
         intermediate_dimension = min(784, max(64, ENCODING_DIMS*2))
         self.fc1 = nn.Linear(784, intermediate_dimension)
         self.fc_mu = nn.Linear(intermediate_dimension, ENCODING_DIMS)
         self.fc_var = nn.Linear(intermediate_dimension, ENCODING_DIMS)
         self.fc2 = nn.Linear(ENCODING_DIMS, 1)
-        self.reconstruct1 = nn.Linear(ENCODING_DIMS, 784) #intermediate_dimension)
-        #self.reconstruct2 = nn.Linear(intermediate_dimension, 784)
-        self.reconstruct_conv1 = nn.ConvTranspose2d(1, 4, 3, stride=1)
+        self.reconstruct1 = nn.Linear(ENCODING_DIMS, intermediate_dimension)
+        self.reconstruct2 = nn.Linear(intermediate_dimension, 1568)
+        self.reconstruct_conv1 = nn.ConvTranspose2d(2, 4, 3, stride=1)
         self.reconstruct_conv2 = nn.ConvTranspose2d(4, 16, 6, stride=1)
         self.reconstruct_conv3 = nn.ConvTranspose2d(16, 16, 7, stride=2)
         self.reconstruct_conv4 = nn.ConvTranspose2d(16, 4, 10, stride=1)
-        self.temporal_difference1 = nn.Linear(ENCODING_DIMS*2, 1)#ENCODING_DIMS)
+        self.temporal_difference1 = nn.Linear(ENCODING_DIMS*2, 1, bias=False)#ENCODING_DIMS)
         #self.temporal_difference2 = nn.Linear(ENCODING_DIMS, 1)
-        self.inverse_dynamics1 = nn.Linear(ENCODING_DIMS*2, ACTION_SPACE_SIZE) #ENCODING_DIMS)
+        self.inverse_dynamics1 = nn.Linear(ENCODING_DIMS*2, ACTION_SPACE_SIZE, bias=False) #ENCODING_DIMS)
         #self.inverse_dynamics2 = nn.Linear(ENCODING_DIMS, ACTION_SPACE_SIZE)
-        self.forward_dynamics1 = nn.Linear(ENCODING_DIMS + ACTION_SPACE_SIZE, ENCODING_DIMS)# (ENCODING_DIMS + ACTION_SPACE_SIZE) * 2)
+        self.forward_dynamics1 = nn.Linear(ENCODING_DIMS + ACTION_SPACE_SIZE, ENCODING_DIMS, bias=False)# (ENCODING_DIMS + ACTION_SPACE_SIZE) * 2)
         #self.forward_dynamics2 = nn.Linear((ENCODING_DIMS + ACTION_SPACE_SIZE) * 2, (ENCODING_DIMS + ACTION_SPACE_SIZE) * 2)
         #self.forward_dynamics3 = nn.Linear((ENCODING_DIMS + ACTION_SPACE_SIZE) * 2, ENCODING_DIMS)
         self.normal = tdist.Normal(0, 1)
@@ -218,8 +218,9 @@ class Net(nn.Module):
 
     def reparameterize(self, mu, var): #var is actually the log variance
         if self.training:
+            device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
             std = var.mul(0.5).exp()
-            eps = self.normal.sample(mu.shape)
+            eps = self.normal.sample(mu.shape).to(device)
             return eps.mul(std).add(mu)
         else:
             return mu
@@ -268,15 +269,17 @@ class Net(nn.Module):
 
     def decode(self, encoding):
         x = F.leaky_relu(self.reconstruct1(encoding))
-        #x = F.leaky_relu(self.reconstruct2(x))
-        x = x.view(-1, 1, 28, 28)
+        x = F.leaky_relu(self.reconstruct2(x))
+        x = x.view(-1, 2, 28, 28)
         #print("------decoding--------")
         #print(x.shape)
         x = F.leaky_relu(self.reconstruct_conv1(x))
         #print(x.shape)
         x = F.leaky_relu(self.reconstruct_conv2(x))
         #print(x.shape)
+        #print(x.shape)
         x = F.leaky_relu(self.reconstruct_conv3(x))
+        #print(x.shape)
         #print(x.shape)
         x = self.sigmoid(self.reconstruct_conv4(x))
         #print(x.shape)
@@ -300,7 +303,7 @@ def reconstruction_loss(decoded, target, mu, logvar):
     bce = F.binary_cross_entropy(decoded, target)
     kld = -0.5 * torch.sum(1 + logvar - mu.pow(2) - logvar.exp())
     kld /= num_elements
-    print("bce: " + str(bce) + " kld: " + str(kld))
+    #print("bce: " + str(bce) + " kld: " + str(kld))
     return bce + kld
 
 # Train the network
@@ -319,6 +322,7 @@ def learn_reward(reward_network, optimizer, training_inputs, training_outputs, t
     for epoch in range(num_iter):
         np.random.shuffle(training_data)
         training_obs, training_labels, training_times_sub, training_actions_sub = zip(*training_data)
+        validation_split = 0.9
         for i in range(len(training_labels)):
             traj_i, traj_j = training_obs[i]
             labels = np.array([training_labels[i]])
@@ -337,7 +341,7 @@ def learn_reward(reward_network, optimizer, training_inputs, training_outputs, t
             #forward + backward + optimize
             outputs, abs_rewards, z1, z2, mu1, mu2, logvar1, logvar2 = reward_network.forward(traj_i, traj_j)
             outputs = outputs.unsqueeze(0)
-            """
+            
             decoded1 = reward_network.decode(z1)
             #print("DECODED SHAPE:")
             #print(decoded1.shape)
@@ -346,58 +350,63 @@ def learn_reward(reward_network, optimizer, training_inputs, training_outputs, t
             #print(traj_i.shape)
             #print(traj_i.type())
             decoded2 = reward_network.decode(z2)
-            reconstruction_loss_1 = reconstruction_loss(decoded1, traj_i, mu1, logvar1)
-            reconstruction_loss_2 = reconstruction_loss(decoded2, traj_j, mu2, logvar2)
-            """
+            reconstruction_loss_1 = 10*reconstruction_loss(decoded1, traj_i, mu1, logvar1)
+            reconstruction_loss_2 = 10*reconstruction_loss(decoded2, traj_j, mu2, logvar2)
+            
 
             t1_i = np.random.randint(0, len(times_i))
             t2_i = np.random.randint(0, len(times_i))
             t1_j = np.random.randint(0, len(times_j))
             t2_j = np.random.randint(0, len(times_j))
             
-            est_dt_i = reward_network.estimate_temporal_difference(z1[t1_i].unsqueeze(0), z1[t2_i].unsqueeze(0))
-            est_dt_j = reward_network.estimate_temporal_difference(z2[t1_j].unsqueeze(0), z2[t2_j].unsqueeze(0))
+            est_dt_i = reward_network.estimate_temporal_difference(mu1[t1_i].unsqueeze(0), mu1[t2_i].unsqueeze(0))
+            est_dt_j = reward_network.estimate_temporal_difference(mu2[t1_j].unsqueeze(0), mu2[t2_j].unsqueeze(0))
             real_dt_i = (times_i[t2_i] - times_i[t1_i])/100.0
             real_dt_j = (times_j[t2_j] - times_j[t1_j])/100.0
 
             actions_1 = reward_network.estimate_inverse_dynamics(mu1[0:-1], mu1[1:])
             actions_2 = reward_network.estimate_inverse_dynamics(mu2[0:-1], mu2[1:])
-            target_actions_1 = torch.LongTensor(actions_i[1:])
-            target_actions_2 = torch.LongTensor(actions_j[1:])
+            target_actions_1 = torch.LongTensor(actions_i[1:]).to(device)
+            target_actions_2 = torch.LongTensor(actions_j[1:]).to(device)
             #print((actions_1, target_actions_1))
             #print((actions_2, target_actions_2))
 
-            inverse_dynamics_loss_1 = inverse_dynamics_loss(actions_1, target_actions_1)
-            inverse_dynamics_loss_2 = inverse_dynamics_loss(actions_2, target_actions_2)
+            inverse_dynamics_loss_1 = inverse_dynamics_loss(actions_1, target_actions_1)/1.9
+            inverse_dynamics_loss_2 = inverse_dynamics_loss(actions_2, target_actions_2)/1.9
 
             forward_dynamics_distance = 5 #1 if epoch <= 1 else np.random.randint(1, min(1, max(epoch, 4)))
             forward_dynamics_actions1 = target_actions_1
             forward_dynamics_actions2 = target_actions_2
-            forward_dynamics_onehot_actions_1 = torch.zeros((num_frames-1, ACTION_SPACE_SIZE), dtype=torch.float32)
-            forward_dynamics_onehot_actions_2 = torch.zeros((num_frames-1, ACTION_SPACE_SIZE), dtype=torch.float32)
+            forward_dynamics_onehot_actions_1 = torch.zeros((num_frames-1, ACTION_SPACE_SIZE), dtype=torch.float32, device=device)
+            forward_dynamics_onehot_actions_2 = torch.zeros((num_frames-1, ACTION_SPACE_SIZE), dtype=torch.float32, device=device)
             forward_dynamics_onehot_actions_1.scatter_(1, forward_dynamics_actions1.unsqueeze(1), 1.0)
             forward_dynamics_onehot_actions_2.scatter_(1, forward_dynamics_actions2.unsqueeze(1), 1.0)
 
-            forward_dynamics_1 = reward_network.forward_dynamics(z1[:-forward_dynamics_distance], forward_dynamics_onehot_actions_1[:(num_frames-forward_dynamics_distance)])
-            forward_dynamics_2 = reward_network.forward_dynamics(z2[:-forward_dynamics_distance], forward_dynamics_onehot_actions_2[:(num_frames-forward_dynamics_distance)])
+            forward_dynamics_1 = reward_network.forward_dynamics(mu1[:-forward_dynamics_distance], forward_dynamics_onehot_actions_1[:(num_frames-forward_dynamics_distance)])
+            forward_dynamics_2 = reward_network.forward_dynamics(mu2[:-forward_dynamics_distance], forward_dynamics_onehot_actions_2[:(num_frames-forward_dynamics_distance)])
             for fd_i in range(forward_dynamics_distance-1):
                 forward_dynamics_1 = reward_network.forward_dynamics(forward_dynamics_1, forward_dynamics_onehot_actions_1[fd_i+1:(num_frames-forward_dynamics_distance+fd_i+1)])
                 forward_dynamics_2 = reward_network.forward_dynamics(forward_dynamics_2, forward_dynamics_onehot_actions_2[fd_i+1:(num_frames-forward_dynamics_distance+fd_i+1)])
 
-            forward_dynamics_loss_1 = forward_dynamics_loss(forward_dynamics_1, z1[forward_dynamics_distance:])
-            forward_dynamics_loss_2 = forward_dynamics_loss(forward_dynamics_2, z2[forward_dynamics_distance:])
+            forward_dynamics_loss_1 = 100 * forward_dynamics_loss(forward_dynamics_1, mu1[forward_dynamics_distance:])
+            forward_dynamics_loss_2 = 100 * forward_dynamics_loss(forward_dynamics_2, mu2[forward_dynamics_distance:])
 
             #print("est_dt: " + str(est_dt_i) + ", real_dt: " + str(real_dt_i))
             #print("est_dt: " + str(est_dt_j) + ", real_dt: " + str(real_dt_j))
-            dt_loss_i = temporal_difference_loss(est_dt_i, torch.tensor(((real_dt_i,),), dtype=torch.float32))
-            dt_loss_j = temporal_difference_loss(est_dt_j, torch.tensor(((real_dt_j,),), dtype=torch.float32))
+            dt_loss_i = 4*temporal_difference_loss(est_dt_i, torch.tensor(((real_dt_i,),), dtype=torch.float32, device=device))
+            dt_loss_j = 4*temporal_difference_loss(est_dt_j, torch.tensor(((real_dt_j,),), dtype=torch.float32, device=device))
 
             #l1_loss = 0.5 * (torch.norm(z1, 1) + torch.norm(z2, 1))
             #trex_loss = loss_criterion(outputs, labels)
 
             #loss = trex_loss + l1_reg * abs_rewards + reconstruction_loss_1 + reconstruction_loss_2 + dt_loss_i + dt_loss_j + inverse_dynamics_loss_1 + inverse_dynamics_loss_2
             #reconstruction_loss_1 + reconstruction_loss_2 + 
-            loss = dt_loss_i + dt_loss_j + inverse_dynamics_loss_1 + inverse_dynamics_loss_2 + forward_dynamics_loss_1 + forward_dynamics_loss_2
+            loss = dt_loss_i + dt_loss_j + (inverse_dynamics_loss_1 + inverse_dynamics_loss_2) + forward_dynamics_loss_1 + forward_dynamics_loss_2 + reconstruction_loss_1 + reconstruction_loss_2
+            if i < len(training_labels) * validation_split:
+                print("TRAINING LOSS", end=" ")
+            else:
+                print("VALIDATION LOSS", end=" ")
+            print("dt_loss", dt_loss_i.item(), dt_loss_j.item(), "inverse_dynamics", inverse_dynamics_loss_1.item(), inverse_dynamics_loss_2.item(), "forward_dynamics", forward_dynamics_loss_1.item(), forward_dynamics_loss_2.item(), "reconstruction", reconstruction_loss_1.item(), reconstruction_loss_2.item(), end=" ")
             #loss = dt_loss_i + dt_loss_j + inverse_dynamics_loss_1 + inverse_dynamics_loss_2 + forward_dynamics_loss_1 + forward_dynamics_loss_2 + l1_loss
             #loss = forward_dynamics_loss_1 + forward_dynamics_loss_2
             #loss = inverse_dynamics_loss_1 + inverse_dynamics_loss_2
@@ -409,11 +418,13 @@ def learn_reward(reward_network, optimizer, training_inputs, training_outputs, t
             #print(loss.data.numpy())
             #sys.stdout.flush()
 
-            loss.backward()
-            optimizer.step()
+            if i < len(training_labels) * validation_split:
+                loss.backward()
+                optimizer.step()
 
             #print stats to see if learning
             item_loss = loss.item()
+            print("total", item_loss)
             cum_loss += item_loss
             if i % 100 == 99:
                 #print(i)
@@ -474,7 +485,7 @@ if __name__=="__main__":
     parser.add_argument('--models_dir', default = ".", help="path to directory that contains a models directory in which the checkpoint models for demos are stored")
     parser.add_argument('--num_trajs', default = 0, type=int, help="number of downsampled full trajectories")
     parser.add_argument('--num_snippets', default = 6000, type = int, help = "number of short subtrajectories to sample")
-    parser.add_argument('--encoding_dims', default = 30, type = int, help = "number of dimensions in the latent space")
+    parser.add_argument('--encoding_dims', default = 200, type = int, help = "number of dimensions in the latent space")
 
     args = parser.parse_args()
     env_name = args.env_name
