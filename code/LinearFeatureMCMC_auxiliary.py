@@ -599,7 +599,7 @@ if __name__=="__main__":
     best_reward.fc2 = best_reward_lastlayer
 
     best_reward.to(device)
-    print(best_reward.state_dict())
+    #print(best_reward.state_dict())
     #save best reward network
     torch.save(best_reward.state_dict(), args.map_reward_model_path)
     demo_pairs, preference_labels = create_mcmc_likelihood_data(demonstrations)
