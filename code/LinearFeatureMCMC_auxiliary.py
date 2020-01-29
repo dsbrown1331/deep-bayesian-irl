@@ -93,7 +93,7 @@ def generate_debug_demos(env, env_name, agent, model_dir):
 
 def generate_novice_demos(env, env_name, agent, model_dir):
     checkpoint_min = 50
-    checkpoint_max = 100
+    checkpoint_max = 600
     checkpoint_step = 50
     checkpoints = []
     if env_name == "enduro":
@@ -473,7 +473,7 @@ if __name__=="__main__":
     parser.add_argument('--seed', default=0, help="random seed for experiments")
     parser.add_argument('--models_dir', default = ".", help="path to directory that contains checkpoint models for demos are stored")
     parser.add_argument('--num_mcmc_steps', default=2000, type = int, help="number of proposals to generate for MCMC")
-    parser.add_argument('--mcmc_step_size', default = 0.001, type=float, help="proposal step is gaussian with zero mean and mcmc_step_size stdev")
+    parser.add_argument('--mcmc_step_size', default = 0.005, type=float, help="proposal step is gaussian with zero mean and mcmc_step_size stdev")
     parser.add_argument('--pretrained_network', help='path to pretrained network weights to form \phi(s) using all but last layer')
     parser.add_argument('--weight_outputfile', help='filename including path to write the chain to')
     parser.add_argument('--debug', help='use fewer demos to speed things up while debugging', action='store_true' )
