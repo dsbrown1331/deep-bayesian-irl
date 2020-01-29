@@ -144,6 +144,7 @@ def common_arg_parser():
     parser.add_argument('--custom_reward_kwargs', default='{}')
     parser.add_argument('--custom_reward_path', default='', help = "file with the pretrained weights from T-REX")
     parser.add_argument('--mcmc_chain_path', default='', help="file with all the weights from mcmc chain")
+    parser.add_argument('--embedding_dim', default=200, type=int, help="dimension of the embedding")
     parser.add_argument('--custom_reward_lambda', default=0.5, type=float, help='convex combo weighting given to IRL verus RL')
     return parser
 

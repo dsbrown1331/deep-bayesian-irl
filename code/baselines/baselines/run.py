@@ -153,7 +153,12 @@ def build_env(args):
             if args.custom_reward_path == '' or args.mcmc_chain_path == '':
                 assert False, 'no path for reward model and/or chain_path'
             else:
-                env = W.VecMCMCMeanAtariReward(env, args.custom_reward_path, args.mcmc_chain_path, env_name)
+                env = W.VecMCMCMeanAtariReward(env, args.custom_reward_path, args.mcmc_chain_path, args.embedding_dim, env_name)
+        elif args.custom_reward == "mcmc_map":
+            if args.custom_reward_path == '':
+                assert False, 'no path for reward model and/or chain_path'
+            else:
+                env = W.VecMCMCMAPAtariReward(env, args.custom_reward_path, args.embedding_dim, env_name)
         else:
             assert False, 'no such wrapper exist'
 
