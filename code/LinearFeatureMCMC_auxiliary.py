@@ -25,9 +25,9 @@ from baselines.common.trex_utils import preprocess
 
 
 def generate_debug_demos(env, env_name, agent, model_dir):
-    checkpoint_min = 200 #50
-    checkpoint_max = 600
-    checkpoint_step = 200 #50
+    checkpoint_min = 50
+    checkpoint_max = 100
+    checkpoint_step = 50
     checkpoints = []
     if env_name == "enduro":
         checkpoint_min = 3100
@@ -55,8 +55,8 @@ def generate_debug_demos(env, env_name, agent, model_dir):
     for checkpoint in checkpoints:
 
         model_path = model_dir + env_name + "_25/" + checkpoint
-        #if env_name == "seaquest":
-#            model_path = model_dir + env_name + "_5/" + checkpoint
+        if env_name == "seaquest":
+            model_path = model_dir + env_name + "_5/" + checkpoint
 
         agent.load(model_path)
         episode_count = 1
@@ -92,25 +92,17 @@ def generate_debug_demos(env, env_name, agent, model_dir):
 
 
 def generate_novice_demos(env, env_name, agent, model_dir):
-    episode_count = 1
     checkpoint_min = 50
-    checkpoint_max = 1200
+    checkpoint_max = 100
     checkpoint_step = 50
     checkpoints = []
     if env_name == "enduro":
-        episode_count = 2
-        checkpoint_min = 3750
-        checkpoint_max = 4850
-        checkpoint_step = 100
+        checkpoint_min = 3100
+        checkpoint_max = 3650
     elif env_name == "seaquest":
-        checkpoint_min = 25
-        checkpoint_max = 600
-        checkpoint_step = 25
-    elif env_name == "breakout":
-        checkpoint_min = 150
-        checkoint_max = 1250
-        checkpoint_step = 100
-        episode_count = 2
+        checkpoint_min = 10
+        checkpoint_max = 65
+        checkpoint_step = 5
     for i in range(checkpoint_min, checkpoint_max + checkpoint_step, checkpoint_step):
         if i < 10:
             checkpoints.append('0000' + str(i))
@@ -130,11 +122,11 @@ def generate_novice_demos(env, env_name, agent, model_dir):
     for checkpoint in checkpoints:
 
         model_path = model_dir + env_name + "_25/" + checkpoint
-        #if env_name == "seaquest":
-        #    model_path = model_dir + env_name + "_5/" + checkpoint
+        if env_name == "seaquest":
+            model_path = model_dir + env_name + "_5/" + checkpoint
 
         agent.load(model_path)
-        #episode_count = 1
+        episode_count = 1
         for i in range(episode_count):
             done = False
             traj = []
