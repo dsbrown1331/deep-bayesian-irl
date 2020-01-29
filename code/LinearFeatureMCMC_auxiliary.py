@@ -19,7 +19,7 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 from run_test import *
-from StrippedNet import EmbeddingNet
+from StrippedNet import EmbeddingNet, EmbeddingNoBiasNet
 from baselines.common.trex_utils import preprocess
 
 
@@ -593,8 +593,8 @@ if __name__=="__main__":
     #best_reward = random_search(reward_net, demonstrations, 40, stdev = 0.01)
     best_reward_lastlayer = mcmc_map_search(reward_net, demonstrations, pairwise_prefs, demo_cnts, args.num_mcmc_steps, args.mcmc_step_size, args.weight_outputfile, args.weight_init)
     #turn this into a full network
-    best_reward = EmbeddingNet(args.encoding_dims)
-    best_reward.fc2 = nn.Linear(num_features, 1, bias=False)
+    best_reward = EmbeddingNoBiasNet(args.encoding_dims)
+    #best_reward.fc2 = nn.Linear(num_features, 1, bias=False)
     best_reward.load_state_dict(torch.load(args.pretrained_network, map_location=device))
     best_reward.fc2 = best_reward_lastlayer
     best_reward.to(device)
