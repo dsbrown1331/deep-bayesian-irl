@@ -26,7 +26,7 @@ import os
 
 def generate_novice_demos(env, env_name, agent, model_dir):
     checkpoint_min = 50
-    checkpoint_max = 100
+    checkpoint_max = 600
     checkpoint_step = 50
     checkpoints = []
     if env_name == "enduro":
@@ -403,10 +403,12 @@ def learn_reward(reward_network, optimizer, training_inputs, training_outputs, t
             #reconstruction_loss_1 + reconstruction_loss_2 +
             loss = dt_loss_i + dt_loss_j + (inverse_dynamics_loss_1 + inverse_dynamics_loss_2) + forward_dynamics_loss_1 + forward_dynamics_loss_2 + reconstruction_loss_1 + reconstruction_loss_2
             if i < len(training_labels) * validation_split:
-                print("TRAINING LOSS", end=" ")
+                #print("TRAINING LOSS", end=" ")
+                pass
             else:
-                print("VALIDATION LOSS", end=" ")
-            print("dt_loss", dt_loss_i.item(), dt_loss_j.item(), "inverse_dynamics", inverse_dynamics_loss_1.item(), inverse_dynamics_loss_2.item(), "forward_dynamics", forward_dynamics_loss_1.item(), forward_dynamics_loss_2.item(), "reconstruction", reconstruction_loss_1.item(), reconstruction_loss_2.item(), end=" ")
+                pass
+                #print("VALIDATION LOSS", end=" ")
+                #print("dt_loss", dt_loss_i.item(), dt_loss_j.item(), "inverse_dynamics", inverse_dynamics_loss_1.item(), inverse_dynamics_loss_2.item(), "forward_dynamics", forward_dynamics_loss_1.item(), forward_dynamics_loss_2.item(), "reconstruction", reconstruction_loss_1.item(), reconstruction_loss_2.item(), end=" ")
             #loss = dt_loss_i + dt_loss_j + inverse_dynamics_loss_1 + inverse_dynamics_loss_2 + forward_dynamics_loss_1 + forward_dynamics_loss_2 + l1_loss
             #loss = forward_dynamics_loss_1 + forward_dynamics_loss_2
             #loss = inverse_dynamics_loss_1 + inverse_dynamics_loss_2
@@ -424,7 +426,7 @@ def learn_reward(reward_network, optimizer, training_inputs, training_outputs, t
 
             #print stats to see if learning
             item_loss = loss.item()
-            print("total", item_loss)
+            #print("total", item_loss)
             cum_loss += item_loss
             if i % 100 == 99:
                 #print(i)
