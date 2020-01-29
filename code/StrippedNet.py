@@ -40,7 +40,7 @@ class EmbeddingNet(nn.Module):
         self.fc_mu = nn.Linear(intermediate_dimension, self.ENCODING_DIMS)
 
         # This is the actual T-REX layer; linear comb. from self.ENCODING_DIMS
-        self.fc2 = nn.Linear(self.ENCODING_DIMS, 1)
+        self.fc2 = nn.Linear(self.ENCODING_DIMS, 1, bias=False)
 
     def cum_return(self, traj):
         '''calculate cumulative return of trajectory'''
