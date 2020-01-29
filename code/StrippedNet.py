@@ -22,9 +22,9 @@ class EmbeddingNet(nn.Module):
         self.device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
         self.ENCODING_DIMS = ENCODING_DIMS
         self.conv1 = nn.Conv2d(4, 16, 7, stride=3)
-        self.conv2 = nn.Conv2d(16, 16, 5, stride=2)
-        self.conv3 = nn.Conv2d(16, 16, 3, stride=1)
-        self.conv4 = nn.Conv2d(16, 16, 3, stride=1)
+        self.conv2 = nn.Conv2d(16, 32, 5, stride=2)
+        self.conv3 = nn.Conv2d(32, 32, 3, stride=1)
+        self.conv4 = nn.Conv2d(32, 16, 3, stride=1)
 
         # This is the width of the layer between the convolved framestack
         # and the actual latent space. Scales with self.ENCODING_DIMS
