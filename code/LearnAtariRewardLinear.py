@@ -197,7 +197,7 @@ class Net(nn.Module):
         self.fc1 = nn.Linear(784, intermediate_dimension)
         self.fc_mu = nn.Linear(intermediate_dimension, ENCODING_DIMS)
         self.fc_var = nn.Linear(intermediate_dimension, ENCODING_DIMS)
-        self.fc2 = nn.Linear(ENCODING_DIMS, 1, bias=False)
+        self.fc2 = nn.Linear(ENCODING_DIMS, 1)
         self.reconstruct1 = nn.Linear(ENCODING_DIMS, intermediate_dimension)
         self.reconstruct2 = nn.Linear(intermediate_dimension, 1568)
         self.reconstruct_conv1 = nn.ConvTranspose2d(2, 4, 3, stride=1)
