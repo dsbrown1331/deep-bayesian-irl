@@ -17,7 +17,7 @@ import random
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-from torchvision.utils import save_image
+#from torchvision.utils import save_image
 from run_test import *
 from baselines.common.trex_utils import preprocess
 import os
