@@ -54,6 +54,7 @@ def get_policy_feature_counts(env_name, checkpointpath, feature_net, num_rollout
     #agent = RandomAgent(env.action_space)
 
     learning_returns = []
+    fcount_rollouts = [] #keep track of the feature counts for each rollout
 
     print("using checkpoint", checkpointpath, "if none then using no-op policy")
     if not no_op:
@@ -62,9 +63,11 @@ def get_policy_feature_counts(env_name, checkpointpath, feature_net, num_rollout
 
     f_counts = np.zeros(feature_net.fc2.in_features)
 
+
     for i in range(episode_count):
         done = False
         traj = []
+        fc_rollout = np.zeros(feature_net.fc2.in_features)
         r = 0
 
         ob = env.reset()
@@ -83,6 +86,7 @@ def get_policy_feature_counts(env_name, checkpointpath, feature_net, num_rollout
             #print(ob_processed.shape)
             phi_s = feature_net.state_feature(torch.from_numpy(ob_processed).float().to(device)).cpu().squeeze().numpy()
             #print(phi_s.shape)
+            fc_rollout += phi_s
             f_counts += phi_s
             steps += 1
             #print(steps)
@@ -90,7 +94,7 @@ def get_policy_feature_counts(env_name, checkpointpath, feature_net, num_rollout
             if done:
                 print("steps: {}, return: {}".format(steps,acc_reward))
                 break
-
+        fcount_rollouts.append(fc_rollout)
         learning_returns.append(acc_reward)
 
 
@@ -101,8 +105,9 @@ def get_policy_feature_counts(env_name, checkpointpath, feature_net, num_rollout
     del env
 
     ave_fcounts = f_counts/episode_count
-
-    return learning_returns, ave_fcounts
+    print('ave', ave_fcounts)
+    print('computed ave', np.mean(np.array(fcount_rollouts), axis=0))
+    return learning_returns, ave_fcounts, fcount_rollouts
 
     #return([np.max(learning_returns), np.min(learning_returns), np.mean(learning_returns)])
 
@@ -144,14 +149,17 @@ if __name__=="__main__":
     elif output_id == 'mean' or output_id == 'map':
         checkpointpath = '/scratch/cluster/dsbrown/tflogs/mcmc/' + env_name + '_linear_' + output_id + '_0/checkpoints/43000'
     else:
+        #checkpointpath = '../../learning-rewards-of-learners/learner/models/' + env_name + '_25/' + output_id
         checkpointpath = '/scratch/cluster/dsbrown/models/' + env_name + '_25/' + output_id
     print("*"*10)
     print(env_name)
     print("*"*10)
-    returns, ave_feature_counts = get_policy_feature_counts(env_name, checkpointpath, feature_net, args.num_rollouts, args.no_op)
+    returns, ave_feature_counts, fcounts = get_policy_feature_counts(env_name, checkpointpath, feature_net, args.num_rollouts, args.no_op)
     print("returns", returns)
     print("feature counts", ave_feature_counts)
     writer = open(args.fcount_dir + env_name + "_" + output_id + args.postfix + "_fcounts_auxiliary.txt", 'w')
     utils.write_line(ave_feature_counts, writer)
+    for fc in fcounts:
+        utils.write_line(fc, writer)
     utils.write_line(returns, writer, newline=False)
     writer.close()
