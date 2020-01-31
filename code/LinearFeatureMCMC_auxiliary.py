@@ -584,9 +584,9 @@ if __name__=="__main__":
             if sorted_returns[i] < sorted_returns[j]:
                 pairwise_prefs.append((i,j))
             else: # they are equal
-                print("equal prefs", i, j, sorted_returns[i], sorted_returns[j])
-                pairwise_prefs.append((i,j))
-                pairwise_prefs.append((j,i))
+                print("not using equal prefs", i, j, sorted_returns[i], sorted_returns[j])
+                #pairwise_prefs.append((i,j))
+                #pairwise_prefs.append((j,i))
 
 
     #run random search over weights
