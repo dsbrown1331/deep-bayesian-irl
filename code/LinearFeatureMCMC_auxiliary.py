@@ -202,7 +202,7 @@ def print_traj_returns(reward_net, demonstrations):
     for i, p in enumerate(pred_returns):
         print(i,p,sorted_returns[i])
 
-def calc_linearized_pairwise_ranking_loss(last_layer, pairwise_prefs, demo_cnts):
+def calc_linearized_pairwise_ranking_loss(last_layer, pairwise_prefs, demo_cnts, confidence=1):
     '''use (i,j) indices and precomputed feature counts to do faster pairwise ranking loss'''
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
     # Assume that we are on a CUDA machine, then this should print a CUDA device:
@@ -218,7 +218,11 @@ def calc_linearized_pairwise_ranking_loss(last_layer, pairwise_prefs, demo_cnts)
         weights = linear.squeeze() #append bias and weights from last fc layer together
         #print('weights',weights)
         #print('demo_cnts', demo_cnts)
-        demo_returns = torch.mv(demo_cnts, weights)
+        demo_returns = confidence * torch.mv(demo_cnts, weights)
+
+        #positivity prior
+        if demo_returns[0] < 0.0:
+            return -numpy.Inf
 
 
         loss_criterion = nn.CrossEntropyLoss(reduction='sum') #sum up losses
