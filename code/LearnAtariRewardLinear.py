@@ -112,7 +112,7 @@ def create_training_data(demonstrations, num_trajs, num_snippets, min_snippet_le
     num_demos = len(demonstrations)
 
     #add full trajs (for use on Enduro)
-    """
+
     for n in range(num_trajs):
         ti = 0
         tj = 0
@@ -137,7 +137,7 @@ def create_training_data(demonstrations, num_trajs, num_snippets, min_snippet_le
         training_obs.append((traj_i, traj_j))
         training_labels.append(label)
         max_traj_length = max(max_traj_length, len(traj_i), len(traj_j))
-    """
+
 
 
     #fixed size snippets with progress prior
@@ -510,12 +510,19 @@ if __name__=="__main__":
     np.random.seed(seed)
     tf.set_random_seed(seed)
 
+
+
     print("Training reward for", env_id)
     num_trajs =  args.num_trajs
     num_snippets = args.num_snippets
     encoding_dims = args.encoding_dims
     min_snippet_length = 50 #min length of trajectory for training comparison
     maximum_snippet_length = 100
+
+    if env_name == "enduro":
+        print("only using full trajs for enduro")
+        num_trajs = 2000
+        num_snippets = 0
 
     lr = 0.0001
     weight_decay = 0.001
