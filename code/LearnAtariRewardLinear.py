@@ -31,7 +31,7 @@ def generate_novice_demos(env, env_name, agent, model_dir):
     checkpoints = []
     if env_name == "enduro":
         checkpoint_min = 3100
-        checkpoint_max = 3150#3650
+        checkpoint_max = 3650
     elif env_name == "seaquest":
         checkpoint_min = 10
         checkpoint_max = 65
@@ -338,7 +338,8 @@ def learn_reward(reward_network, optimizer, training_inputs, training_outputs, t
             traj_i = torch.from_numpy(traj_i).float().to(device)
             traj_j = torch.from_numpy(traj_j).float().to(device)
             labels = torch.from_numpy(labels).to(device)
-            num_frames = len(traj_i)
+            num_frames_i = len(traj_i)
+            num_frames_j = len(traj_j)
 
             #zero out gradient
             optimizer.zero_grad()
@@ -382,16 +383,22 @@ def learn_reward(reward_network, optimizer, training_inputs, training_outputs, t
             forward_dynamics_distance = 5 #1 if epoch <= 1 else np.random.randint(1, min(1, max(epoch, 4)))
             forward_dynamics_actions1 = target_actions_1
             forward_dynamics_actions2 = target_actions_2
-            forward_dynamics_onehot_actions_1 = torch.zeros((num_frames-1, ACTION_DIMS), dtype=torch.float32, device=device)
-            forward_dynamics_onehot_actions_2 = torch.zeros((num_frames-1, ACTION_DIMS), dtype=torch.float32, device=device)
+            forward_dynamics_onehot_actions_1 = torch.zeros((num_frames_i-1, ACTION_DIMS), dtype=torch.float32, device=device)
+            forward_dynamics_onehot_actions_2 = torch.zeros((num_frames_j-1, ACTION_DIMS), dtype=torch.float32, device=device)
+            #print(forward_dynamics_actions1)
+            #print(forward_dynamics_actions1.size())
+            #print(forward_dynamics_actions1.unsqueeze(1))
+            #print(forward_dynamics_actions1.unsqueeze(1).size())
+
+            #input()
             forward_dynamics_onehot_actions_1.scatter_(1, forward_dynamics_actions1.unsqueeze(1), 1.0)
             forward_dynamics_onehot_actions_2.scatter_(1, forward_dynamics_actions2.unsqueeze(1), 1.0)
 
-            forward_dynamics_1 = reward_network.forward_dynamics(mu1[:-forward_dynamics_distance], forward_dynamics_onehot_actions_1[:(num_frames-forward_dynamics_distance)])
-            forward_dynamics_2 = reward_network.forward_dynamics(mu2[:-forward_dynamics_distance], forward_dynamics_onehot_actions_2[:(num_frames-forward_dynamics_distance)])
+            forward_dynamics_1 = reward_network.forward_dynamics(mu1[:-forward_dynamics_distance], forward_dynamics_onehot_actions_1[:(num_frames_i-forward_dynamics_distance)])
+            forward_dynamics_2 = reward_network.forward_dynamics(mu2[:-forward_dynamics_distance], forward_dynamics_onehot_actions_2[:(num_frames_j-forward_dynamics_distance)])
             for fd_i in range(forward_dynamics_distance-1):
-                forward_dynamics_1 = reward_network.forward_dynamics(forward_dynamics_1, forward_dynamics_onehot_actions_1[fd_i+1:(num_frames-forward_dynamics_distance+fd_i+1)])
-                forward_dynamics_2 = reward_network.forward_dynamics(forward_dynamics_2, forward_dynamics_onehot_actions_2[fd_i+1:(num_frames-forward_dynamics_distance+fd_i+1)])
+                forward_dynamics_1 = reward_network.forward_dynamics(forward_dynamics_1, forward_dynamics_onehot_actions_1[fd_i+1:(num_frames_i-forward_dynamics_distance+fd_i+1)])
+                forward_dynamics_2 = reward_network.forward_dynamics(forward_dynamics_2, forward_dynamics_onehot_actions_2[fd_i+1:(num_frames_j-forward_dynamics_distance+fd_i+1)])
 
             forward_dynamics_loss_1 = 100 * forward_dynamics_loss(forward_dynamics_1, mu1[forward_dynamics_distance:])
             forward_dynamics_loss_2 = 100 * forward_dynamics_loss(forward_dynamics_2, mu2[forward_dynamics_distance:])
