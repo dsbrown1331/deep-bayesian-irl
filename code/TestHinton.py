@@ -24,7 +24,39 @@ import os
 
 
 
-def generate_novice_demos(env, env_name, agent, model_dir):
+def generate_novice_demos(env, env_name, agent, model_path ):
+    agent.load(model_path)
+    #agent = RandomAgent(env.action_space)
+
+    episode_count = 2
+    reward = 0
+    done = False
+
+    env_test=gym.make(args.env_id)
+    print(env_test.unwrapped.get_action_meanings())
+
+    for i in range(int(episode_count)):
+        ob = env.reset()
+        steps = 0
+        acc_reward = 0
+        while True:
+
+            action = agent.act(ob, reward, done)
+            #action = env.action_space.sample()
+            ob, reward, done, _ = env.step(action)
+            if args.render:
+                env.render()
+
+            steps += 1
+            acc_reward += reward
+            if done:
+                print(steps,acc_reward)
+                break
+
+    env.close()
+    env.venv.close()
+
+
     checkpoint_min = 50
     checkpoint_max = 600
     checkpoint_step = 50
@@ -105,7 +137,7 @@ if __name__=="__main__":
     parser = argparse.ArgumentParser(description=None)
     parser.add_argument('--env_name', default='', help='Select the environment name to run, i.e. pong')
     parser.add_argument('--models_dir', default = ".", help="path to directory that contains a models directory in which the checkpoint models for demos are stored")
-    
+
     args = parser.parse_args()
     env_name = args.env_name
     if env_name == "spaceinvaders":
