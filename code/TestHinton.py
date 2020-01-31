@@ -104,8 +104,8 @@ def generate_novice_demos(env, env_name, agent, model_dir):
 if __name__=="__main__":
     parser = argparse.ArgumentParser(description=None)
     parser.add_argument('--env_name', default='', help='Select the environment name to run, i.e. pong')
-    parser.add_argument('--reward_model_path', default='', help="name and location for learned model params, e.g. ./learned_models/breakout.params")
-
+    parser.add_argument('--models_dir', default = ".", help="path to directory that contains a models directory in which the checkpoint models for demos are stored")
+    
     args = parser.parse_args()
     env_name = args.env_name
     if env_name == "spaceinvaders":
@@ -141,3 +141,5 @@ if __name__=="__main__":
 
     env = VecFrameStack(env, 4)
     agent = PPO2Agent(env, env_type, stochastic)
+
+    demonstrations, learning_returns, learning_rewards = generate_novice_demos(env, env_name, agent, args.models_dir)
