@@ -31,7 +31,7 @@ def generate_novice_demos(env, env_name, agent, model_dir):
     checkpoints = []
     if env_name == "enduro":
         checkpoint_min = 3100
-        checkpoint_max = 3650
+        checkpoint_max = 3150#3650
     elif env_name == "seaquest":
         checkpoint_min = 10
         checkpoint_max = 65
@@ -126,16 +126,21 @@ def create_training_data(demonstrations, num_trajs, num_snippets, min_snippet_le
         sj = np.random.randint(6)
         step = np.random.randint(3,7)
 
-        traj_i = demonstrations[ti][si::step]  #slice(start,stop,step)
-        traj_j = demonstrations[tj][sj::step]
+        traj_i = demonstrations[ti][0][si::step]  #slice(start,stop,step)
+        traj_j = demonstrations[tj][0][sj::step]
+        traj_i_actions = demonstrations[ti][1][si::step] #skip everyother framestack to reduce size
+        traj_j_actions = demonstrations[tj][1][sj::step]
 
         if ti > tj:
             label = 0
         else:
             label = 1
 
+        #print(len(list(range(si, len(demonstrations[ti][0]), step))), len(traj_i_actions), len(traj_i) )
+        times.append((list(range(si, len(demonstrations[ti][0]), step)), list(range(sj, len(demonstrations[tj][0]), step))))
         training_obs.append((traj_i, traj_j))
         training_labels.append(label)
+        actions.append((traj_i_actions, traj_j_actions))
         max_traj_length = max(max_traj_length, len(traj_i), len(traj_j))
 
 
