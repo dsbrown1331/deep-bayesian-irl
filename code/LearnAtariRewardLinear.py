@@ -322,7 +322,7 @@ def learn_reward(reward_network, optimizer, training_inputs, training_outputs, t
     for epoch in range(num_iter):
         np.random.shuffle(training_data)
         training_obs, training_labels, training_times_sub, training_actions_sub = zip(*training_data)
-        validation_split = 0.9
+        validation_split = 1.0
         for i in range(len(training_labels)):
             traj_i, traj_j = training_obs[i]
             labels = np.array([training_labels[i]])
@@ -397,16 +397,16 @@ def learn_reward(reward_network, optimizer, training_inputs, training_outputs, t
             dt_loss_j = 4*temporal_difference_loss(est_dt_j, torch.tensor(((real_dt_j,),), dtype=torch.float32, device=device))
 
             #l1_loss = 0.5 * (torch.norm(z1, 1) + torch.norm(z2, 1))
-            #trex_loss = loss_criterion(outputs, labels)
+            trex_loss = loss_criterion(outputs, labels)
 
             #loss = trex_loss + l1_reg * abs_rewards + reconstruction_loss_1 + reconstruction_loss_2 + dt_loss_i + dt_loss_j + inverse_dynamics_loss_1 + inverse_dynamics_loss_2
             #reconstruction_loss_1 + reconstruction_loss_2 +
-            loss = dt_loss_i + dt_loss_j + (inverse_dynamics_loss_1 + inverse_dynamics_loss_2) + forward_dynamics_loss_1 + forward_dynamics_loss_2 + reconstruction_loss_1 + reconstruction_loss_2
-            if i < len(training_labels) * validation_split:
+            loss = dt_loss_i + dt_loss_j + (inverse_dynamics_loss_1 + inverse_dynamics_loss_2) + forward_dynamics_loss_1 + forward_dynamics_loss_2 + reconstruction_loss_1 + reconstruction_loss_2 + trex_loss
+            #if i < len(training_labels) * validation_split:
                 #print("TRAINING LOSS", end=" ")
-                pass
-            else:
-                pass
+            #    pass
+            #else:
+            #    pass
                 #print("VALIDATION LOSS", end=" ")
                 #print("dt_loss", dt_loss_i.item(), dt_loss_j.item(), "inverse_dynamics", inverse_dynamics_loss_1.item(), inverse_dynamics_loss_2.item(), "forward_dynamics", forward_dynamics_loss_1.item(), forward_dynamics_loss_2.item(), "reconstruction", reconstruction_loss_1.item(), reconstruction_loss_2.item(), end=" ")
             #loss = dt_loss_i + dt_loss_j + inverse_dynamics_loss_1 + inverse_dynamics_loss_2 + forward_dynamics_loss_1 + forward_dynamics_loss_2 + l1_loss
@@ -428,7 +428,7 @@ def learn_reward(reward_network, optimizer, training_inputs, training_outputs, t
             item_loss = loss.item()
             #print("total", item_loss)
             cum_loss += item_loss
-            if i % 100 == 99:
+            if i % 1000 == 999:
                 #print(i)
                 print("epoch {}:{} loss {}".format(epoch,i, cum_loss))
                 print(abs_rewards)
@@ -486,8 +486,8 @@ if __name__=="__main__":
     parser.add_argument('--seed', default=0, help="random seed for experiments")
     parser.add_argument('--models_dir', default = ".", help="path to directory that contains a models directory in which the checkpoint models for demos are stored")
     parser.add_argument('--num_trajs', default = 0, type=int, help="number of downsampled full trajectories")
-    parser.add_argument('--num_snippets', default = 6000, type = int, help = "number of short subtrajectories to sample")
-    parser.add_argument('--encoding_dims', default = 200, type = int, help = "number of dimensions in the latent space")
+    parser.add_argument('--num_snippets', default = 60000, type = int, help = "number of short subtrajectories to sample")
+    parser.add_argument('--encoding_dims', default = 64, type = int, help = "number of dimensions in the latent space")
 
     args = parser.parse_args()
     env_name = args.env_name
@@ -517,9 +517,9 @@ if __name__=="__main__":
     min_snippet_length = 50 #min length of trajectory for training comparison
     maximum_snippet_length = 100
 
-    lr = 0.00005
-    weight_decay = 0.0
-    num_iter = 5 #num times through training data
+    lr = 0.0001
+    weight_decay = 0.001
+    num_iter = 1 #num times through training data
     l1_reg=0.0
     stochastic = True
 
