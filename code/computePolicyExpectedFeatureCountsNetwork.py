@@ -151,8 +151,8 @@ if __name__=="__main__":
     elif output_id == 'mean' or output_id == 'map':
         checkpointpath = '/scratch/cluster/dsbrown/tflogs/mcmc/' + env_name + '_linear_' + output_id + '_0/checkpoints/43000'
     else:
-        checkpointpath = '../../learning-rewards-of-learners/learner/models/' + env_name + '_25/' + output_id
-        #checkpointpath = '/scratch/cluster/dsbrown/models/' + env_name + '_25/' + output_id
+        #checkpointpath = '../../learning-rewards-of-learners/learner/models/' + env_name + '_25/' + output_id
+        checkpointpath = '/scratch/cluster/dsbrown/models/' + env_name + '_25/' + output_id
     print("*"*10)
     print(env_name)
     print("*"*10)
