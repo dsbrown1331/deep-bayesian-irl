@@ -55,6 +55,7 @@ def get_policy_feature_counts(env_name, checkpointpath, feature_net, num_rollout
 
     learning_returns = []
     fcount_rollouts = [] #keep track of the feature counts for each rollout
+    num_steps = []
 
     print("using checkpoint", checkpointpath, "if none then using no-op policy")
     if not no_op:
@@ -96,6 +97,7 @@ def get_policy_feature_counts(env_name, checkpointpath, feature_net, num_rollout
                 break
         fcount_rollouts.append(fc_rollout)
         learning_returns.append(acc_reward)
+        num_steps.append(steps)
 
 
 
@@ -107,7 +109,7 @@ def get_policy_feature_counts(env_name, checkpointpath, feature_net, num_rollout
     ave_fcounts = f_counts/episode_count
     print('ave', ave_fcounts)
     print('computed ave', np.mean(np.array(fcount_rollouts), axis=0))
-    return learning_returns, ave_fcounts, fcount_rollouts
+    return learning_returns, ave_fcounts, fcount_rollouts, num_steps
 
     #return([np.max(learning_returns), np.min(learning_returns), np.mean(learning_returns)])
 
@@ -149,17 +151,18 @@ if __name__=="__main__":
     elif output_id == 'mean' or output_id == 'map':
         checkpointpath = '/scratch/cluster/dsbrown/tflogs/mcmc/' + env_name + '_linear_' + output_id + '_0/checkpoints/43000'
     else:
-        #checkpointpath = '../../learning-rewards-of-learners/learner/models/' + env_name + '_25/' + output_id
-        checkpointpath = '/scratch/cluster/dsbrown/models/' + env_name + '_25/' + output_id
+        checkpointpath = '../../learning-rewards-of-learners/learner/models/' + env_name + '_25/' + output_id
+        #checkpointpath = '/scratch/cluster/dsbrown/models/' + env_name + '_25/' + output_id
     print("*"*10)
     print(env_name)
     print("*"*10)
-    returns, ave_feature_counts, fcounts = get_policy_feature_counts(env_name, checkpointpath, feature_net, args.num_rollouts, args.no_op)
+    returns, ave_feature_counts, fcounts, num_steps = get_policy_feature_counts(env_name, checkpointpath, feature_net, args.num_rollouts, args.no_op)
     print("returns", returns)
     print("feature counts", ave_feature_counts)
     writer = open(args.fcount_dir + env_name + "_" + output_id + args.postfix + "_fcounts_auxiliary.txt", 'w')
     utils.write_line(ave_feature_counts, writer)
     for fc in fcounts:
         utils.write_line(fc, writer)
-    utils.write_line(returns, writer, newline=False)
+    utils.write_line(returns, writer)
+    utils.write_line(num_steps, writer, newline=False)
     writer.close()
