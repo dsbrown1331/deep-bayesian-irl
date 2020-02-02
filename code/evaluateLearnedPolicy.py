@@ -10,7 +10,7 @@ from run_test import *
 #import matplotlib.pylab as plt
 import argparse
 
-def evaluate_learned_policy(env_name, checkpointpath):
+def evaluate_learned_policy(env_name, checkpointpath, num_episodes):
     if env_name == "spaceinvaders":
         env_id = "SpaceInvadersNoFrameskip-v4"
     elif env_name == "mspacman":
@@ -47,7 +47,7 @@ def evaluate_learned_policy(env_name, checkpointpath):
     print(checkpointpath)
 
     agent.load(checkpointpath)
-    episode_count = 30
+    episode_count = num_episodes
     for i in range(episode_count):
         done = False
         traj = []
@@ -88,6 +88,7 @@ if __name__=="__main__":
     parser.add_argument('--seed', default=1234, help="random seed for experiments")
     parser.add_argument('--env_name', default='', help='Select the environment name to run, i.e. pong')
     parser.add_argument('--checkpointpath', default='', help='path to checkpoint to run eval on')
+    parser.add_argument('--num_episodes', default = 30, type=int, help='number of rollouts')
     args = parser.parse_args()
     env_name = args.env_name
     #set seeds
@@ -100,7 +101,7 @@ if __name__=="__main__":
     print("*"*10)
     print(env_name)
     print("*"*10)
-    returns = evaluate_learned_policy(env_name, checkpointpath)
+    returns = evaluate_learned_policy(env_name, checkpointpath, args.num_episodes)
     #write returns to file
     f = open("./eval/" + env_name + checkpointpath.replace("/","_") + "_evaluation.txt",'w')
     for r in returns:

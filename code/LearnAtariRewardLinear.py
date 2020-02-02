@@ -440,7 +440,7 @@ def learn_reward(reward_network, optimizer, training_inputs, training_outputs, t
             item_loss = loss.item()
             #print("total", item_loss)
             cum_loss += item_loss
-            if i % 1000 == 999:
+            if i % 500 == 499:
                 #print(i)
                 print("epoch {}:{} loss {}".format(epoch,i, cum_loss))
                 print(abs_rewards)
@@ -533,7 +533,7 @@ if __name__=="__main__":
 
     if env_name == "enduro":
         print("only using full trajs for enduro")
-        num_trajs = 2000
+        num_trajs = 10000
         num_snippets = 0
 
     lr = 0.0001

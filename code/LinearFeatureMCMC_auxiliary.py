@@ -222,7 +222,7 @@ def calc_linearized_pairwise_ranking_loss(last_layer, pairwise_prefs, demo_cnts,
 
         #positivity prior
         if demo_returns[0] < 0.0:
-            return -numpy.Inf
+            return torch.Tensor([-float("Inf")])
 
 
         loss_criterion = nn.CrossEntropyLoss(reduction='sum') #sum up losses

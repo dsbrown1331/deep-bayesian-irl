@@ -149,7 +149,7 @@ if __name__=="__main__":
 
     if args.no_op:
         checkpointpath = None
-    else if args.rl_eval:
+    elif args.rl_eval:
         checkpointpath = '/scratch/cluster/dsbrown/tflogs/rl/' + env_name + '_0/checkpoints/' + output_id
     elif output_id == 'mean' or output_id == 'map':
         checkpointpath = '/scratch/cluster/dsbrown/tflogs/mcmc/' + env_name + '_linear_' + output_id + '_0/checkpoints/43000'

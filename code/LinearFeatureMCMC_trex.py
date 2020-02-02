@@ -539,7 +539,7 @@ if __name__=="__main__":
     # Now we download a pretrained network to form \phi(s) the state features where the reward is now w^T \phi(s)
 
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
-    reward_net = EmbeddingNet(args.encoding_dims)
+    reward_net = EmbeddingNet()
     reward_net.load_state_dict(torch.load(args.pretrained_network, map_location=device))
     #reinitialize last layer
     num_features = reward_net.fc2.in_features
@@ -593,7 +593,7 @@ if __name__=="__main__":
     #best_reward = random_search(reward_net, demonstrations, 40, stdev = 0.01)
     best_reward_lastlayer = mcmc_map_search(reward_net, demonstrations, pairwise_prefs, demo_cnts, args.num_mcmc_steps, args.mcmc_step_size, args.weight_outputfile, args.weight_init)
     #turn this into a full network
-    best_reward = EmbeddingNet(args.encoding_dims)
+    best_reward = EmbeddingNet()
     #best_reward.fc2 = nn.Linear(num_features, 1, bias=False)
     best_reward.load_state_dict(torch.load(args.pretrained_network, map_location=device))
     best_reward.fc2 = best_reward_lastlayer
