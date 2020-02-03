@@ -93,6 +93,8 @@ def worst_percentile(_sequence, alpha):
     sorted_seq = sorted(_sequence)
     #find alpha percentile
     alpha_indx = int(np.floor(alpha * len(_sequence)))
+    if alpha_indx >= len(sorted_seq):
+        return sorted_seq[-1]
     return sorted_seq[alpha_indx]
 
 if __name__=="__main__":
