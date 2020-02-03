@@ -312,7 +312,7 @@ def reconstruction_loss(decoded, target, mu, logvar):
     return bce + kld
 
 # Train the network
-def learn_reward(reward_network, optimizer, training_inputs, training_outputs, training_times, training_actions, num_iter, l1_reg, checkpoint_dir):
+def learn_reward(reward_network, optimizer, training_inputs, training_outputs, training_times, training_actions, num_iter, l1_reg, checkpoint_dir, loss_fn):
     #check if gpu available
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
     # Assume that we are on a CUDA machine, then this should print a CUDA device:
@@ -505,7 +505,7 @@ if __name__=="__main__":
     parser.add_argument('--num_trajs', default = 0, type=int, help="number of downsampled full trajectories")
     parser.add_argument('--num_snippets', default = 60000, type = int, help = "number of short subtrajectories to sample")
     parser.add_argument('--encoding_dims', default = 64, type = int, help = "number of dimensions in the latent space")
-    parser.add_argument('--loss_fn', default='trex+ss', type=string, help="ss: selfsupervised, trex: only trex, trex+ss: both trex and selfsupervised")
+    parser.add_argument('--loss_fn', default='trex+ss', help="ss: selfsupervised, trex: only trex, trex+ss: both trex and selfsupervised")
 
     args = parser.parse_args()
     env_name = args.env_name
