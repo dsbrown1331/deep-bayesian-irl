@@ -413,7 +413,12 @@ def learn_reward(reward_network, optimizer, training_inputs, training_outputs, t
 
             #loss = trex_loss + l1_reg * abs_rewards + reconstruction_loss_1 + reconstruction_loss_2 + dt_loss_i + dt_loss_j + inverse_dynamics_loss_1 + inverse_dynamics_loss_2
             #reconstruction_loss_1 + reconstruction_loss_2 +
-            loss = dt_loss_i + dt_loss_j + (inverse_dynamics_loss_1 + inverse_dynamics_loss_2) + forward_dynamics_loss_1 + forward_dynamics_loss_2 + reconstruction_loss_1 + reconstruction_loss_2 + trex_loss
+            if loss_fn == "trex": #only use trex loss
+                loss = trex_loss
+            elif loss_fn == "ss": #only use self-supervised loss
+                loss = dt_loss_i + dt_loss_j + (inverse_dynamics_loss_1 + inverse_dynamics_loss_2) + forward_dynamics_loss_1 + forward_dynamics_loss_2 + reconstruction_loss_1 + reconstruction_loss_2
+            elif loss_fn == "trex+ss":
+                loss = dt_loss_i + dt_loss_j + (inverse_dynamics_loss_1 + inverse_dynamics_loss_2) + forward_dynamics_loss_1 + forward_dynamics_loss_2 + reconstruction_loss_1 + reconstruction_loss_2 + trex_loss
             #if i < len(training_labels) * validation_split:
                 #print("TRAINING LOSS", end=" ")
             #    pass
@@ -500,6 +505,7 @@ if __name__=="__main__":
     parser.add_argument('--num_trajs', default = 0, type=int, help="number of downsampled full trajectories")
     parser.add_argument('--num_snippets', default = 60000, type = int, help = "number of short subtrajectories to sample")
     parser.add_argument('--encoding_dims', default = 64, type = int, help = "number of dimensions in the latent space")
+    parser.add_argument('--loss_fn', default='trex+ss', type=string, help="ss: selfsupervised, trex: only trex, trex+ss: both trex and selfsupervised")
 
     args = parser.parse_args()
     env_name = args.env_name
@@ -586,7 +592,7 @@ if __name__=="__main__":
     reward_net.to(device)
     import torch.optim as optim
     optimizer = optim.Adam(reward_net.parameters(),  lr=lr, weight_decay=weight_decay)
-    learn_reward(reward_net, optimizer, training_obs, training_labels, training_times, training_actions, num_iter, l1_reg, args.reward_model_path)
+    learn_reward(reward_net, optimizer, training_obs, training_labels, training_times, training_actions, num_iter, l1_reg, args.reward_model_path, args.loss_fn)
     #save reward network
     torch.save(reward_net.state_dict(), args.reward_model_path)
 
