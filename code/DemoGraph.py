@@ -1,11 +1,11 @@
 
+import os
+os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'  # or any {'0', '1', '2'}
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
 import torch.distributions as tdist
 import numpy as np
-ACTION_SPACE_SIZE = 6
-"""
 import argparse
 # coding: utf-8
 
@@ -34,10 +34,12 @@ def generate_novice_demos(env, env_name, agent, model_dir):
     if env_name == "enduro":
         checkpoint_min = 3100
         checkpoint_max = 3650
+    """
     elif env_name == "seaquest":
         checkpoint_min = 10
         checkpoint_max = 65
         checkpoint_step = 5
+    """
     for i in range(checkpoint_min, checkpoint_max + checkpoint_step, checkpoint_step):
         if i < 10:
             checkpoints.append('0000' + str(i))
@@ -57,11 +59,11 @@ def generate_novice_demos(env, env_name, agent, model_dir):
     for checkpoint in checkpoints:
 
         model_path = model_dir + "/models/" + env_name + "_25/" + checkpoint
-        if env_name == "seaquest":
-            model_path = model_dir + "/models/" + env_name + "_5/" + checkpoint
+        #if env_name == "seaquest":
+        #    model_path = model_dir + "/models/" + env_name + "_5/" + checkpoint
 
         agent.load(model_path)
-        episode_count = 30
+        episode_count = 5 #30
         for i in range(episode_count):
             done = False
             traj = []
@@ -102,6 +104,7 @@ def generate_novice_demos(env, env_name, agent, model_dir):
 
 
 
+"""
 
 
 def create_training_data(demonstrations, num_trajs, num_snippets, min_snippet_length, max_snippet_length):
@@ -188,7 +191,7 @@ def create_training_data(demonstrations, num_trajs, num_snippets, min_snippet_le
 """
 
 class Net(nn.Module):
-    def __init__(self, ENCODING_DIMS):
+    def __init__(self, ENCODING_DIMS, ACTION_SPACE_SIZE):
         super().__init__()
 
         self.conv1 = nn.Conv2d(4, 16, 7, stride=3)
@@ -216,11 +219,11 @@ class Net(nn.Module):
         self.normal = tdist.Normal(0, 1)
         self.softmax = nn.Softmax(dim=1)
         self.sigmoid = nn.Sigmoid()
-        print("Intermediate dimension calculated to be: " + str(intermediate_dimension))
+        #print("Intermediate dimension calculated to be: " + str(intermediate_dimension))
 
     def reparameterize(self, mu, var): #var is actually the log variance
         if self.training:
-            device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+            device = torch.device("cpu")
             std = var.mul(0.5).exp()
             eps = self.normal.sample(mu.shape).to(device)
             return eps.mul(std).add(mu)
@@ -276,27 +279,27 @@ class Net(nn.Module):
         return x
 
     def decode(self, encoding):
-        print("before:", encoding.shape)
+        #print("before:", encoding.shape)
         x = F.leaky_relu(self.reconstruct1(encoding))
-        print("after reconstruct1:", x.shape)
+        #print("after reconstruct1:", x.shape)
         x = F.leaky_relu(self.reconstruct2(x))
-        print("after reconstruct2:", x.shape)
+        #print("after reconstruct2:", x.shape)
         x = x.view(-1, 2, 28, 28)
         #print("------decoding--------")
         #print(x.shape)
         x = F.leaky_relu(self.reconstruct_conv1(x))
-        print("after reconstruct_conv1:", x.shape)
+        #print("after reconstruct_conv1:", x.shape)
         #print(x.shape)
         x = F.leaky_relu(self.reconstruct_conv2(x))
-        print("after reconstruct_conv2:", x.shape)
+        #print("after reconstruct_conv2:", x.shape)
         #print(x.shape)
         #print(x.shape)
         x = F.leaky_relu(self.reconstruct_conv3(x))
-        print("after reconstruct_conv3:", x.shape)
+        #print("after reconstruct_conv3:", x.shape)
         #print(x.shape)
         #print(x.shape)
         x = self.sigmoid(self.reconstruct_conv4(x))
-        print("after reconstruct_conv4:", x.shape)
+        #print("after reconstruct_conv4:", x.shape)
         #print(x.shape)
         #print("------end decoding--------")
         return x.permute(0, 2, 3, 1)
@@ -490,19 +493,179 @@ def predict_reward_sequence(net, traj):
 
 def predict_traj_return(net, traj):
     return sum(predict_reward_sequence(net, traj))
-"""
 
 
 from tkinter import Tk, Text, TOP, BOTH, X, Y, N, LEFT, RIGHT, Frame, Label, Entry, Scale, HORIZONTAL, Listbox, END, Button, Canvas
+"""
 from PIL import Image, ImageTk
 #from tkinter.ttk import Frame, Label, Entry, Style
+import os
+import sys
+if len(sys.argv) < 2:
+    print("Usage: " + sys.argv[0] + " <folder>")
+    sys.exit()
 
 ENCODING_DIMS = 64
 
-net = Net(ENCODING_DIMS)
-#net.cum_return(torch.zeros((1, 84, 84, 4)))
-net.load_state_dict(torch.load("reappendix/spaceinvaders_64_all.params"))
+seed = 0
+folder_name = sys.argv[1]
+nname = sys.argv[2]
+print(nname)
+if not nname.endswith(".params"):
+    sys.exit()
+print("    letsgo")
+file_name = folder_name + "/" + nname 
+data_name = file_name + "_demos/"
+if os.path.exists(data_name):
+    print("    Already exists: " + data_name)
+    sys.exit()
+os.mkdir(data_name)
 
+state_dict = torch.load(file_name)
+action_space_size, encoding_dims_times_two = state_dict['inverse_dynamics1.weight'].shape
+if encoding_dims_times_two % 2 != 0:
+    print("uh ohhhhh")
+encoding_dims = encoding_dims_times_two // 2
+net = Net(encoding_dims, action_space_size)
+#net.cum_return(torch.zeros((1, 84, 84, 4)))
+net.load_state_dict(state_dict)
+
+env_name = nname.split("_")[0]
+if env_name == "spaceinvaders":
+    env_id = "SpaceInvadersNoFrameskip-v4"
+elif env_name == "mspacman":
+    env_id = "MsPacmanNoFrameskip-v4"
+elif env_name == "videopinball":
+    env_id = "VideoPinballNoFrameskip-v4"
+elif env_name == "beamrider":
+    env_id = "BeamRiderNoFrameskip-v4"
+else:
+    env_id = env_name[0].upper() + env_name[1:] + "NoFrameskip-v4"
+
+env = make_vec_env(env_id, 'atari', 1, seed,
+                   wrapper_kwargs={
+                       'clip_rewards':False,
+                       'episode_life':False,
+                   })
+
+stochastic = True
+
+import colorsys
+def hsv2rgb(h,s,v):
+    return tuple(round(i * 255) for i in colorsys.hsv_to_rgb(h,s,v))
+
+env = VecFrameStack(env, 4)
+agent = PPO2Agent(env, "atari", stochastic)
+print("    Generating demo")
+device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+demos, _, _ = generate_novice_demos(env, env_name, agent, ".")
+ndemo = 0
+for demo_and_actions in demos:
+    os.mkdir(data_name + str(ndemo))
+    with torch.no_grad():
+        demo, _ = demo_and_actions
+        print("    Done demo")
+        demo = torch.FloatTensor(demo)
+        print("    Made tensor")
+        _, _, encoding, _, _ = net.cum_return(demo)
+        print("    Encoded")
+        print(demo.device)
+        print("   ", demo.shape)
+        decoded = (net.decode(encoding).permute(0, 3, 1, 2).reshape(-1, 84*4, 84).numpy() * 255).astype(np.uint8)
+        dc_s = decoded.shape[0]
+        print("    Number of images in decoded:", dc_s)
+        im_demo = (demo.permute(0, 3, 1, 2).reshape(-1, 84*4, 84).numpy() * 255).astype(np.uint8)
+        dm_s = im_demo.shape[0]
+        print("    Number of images in demo:", dc_s)
+        if dc_s != dm_s:
+            print("Image size mismatch")
+            sys.exit()
+
+        zeros = np.zeros((84*4, dc_s, 3), dtype=np.uint8)
+        for i in range(dc_s):
+            for k in range(encoding_dims):
+                val = 84*2 + int(encoding[i][k] / 1.8 * 84 * 2)
+                if val >= 0 and val < 84*4:
+                    zeros[val][i] = hsv2rgb(k / encoding_dims, 1, 1)
+                
+            color_dec = np.repeat(np.expand_dims(decoded[i], 2), 3, axis=2)
+            color_dem = np.repeat(np.expand_dims(im_demo[i], 2), 3, axis=2)
+            cat = np.concatenate((color_dem, color_dec, zeros), 1)
+            Image.fromarray(cat).save(data_name + str(ndemo) + "/" + str(i) + ".png")
+        ndemo += 1
+"""
+
+with torch.no_grad():
+    x = [0] * ENCODING_DIMS
+    tarray = torch.FloatTensor(x).unsqueeze(dim=0)
+    decoded = (net.decode(tarray).permute(0, 3, 1, 2).reshape(84*4, 84).numpy() * 255).astype(np.uint8)
+    img = Image.fromarray(decoded)
+    img.save(data_name + "zero.png")
+    for k in range(4):
+        for i in range(ENCODING_DIMS):
+            x[i] = np.random.randn() * 2
+        tarray = torch.FloatTensor(x).unsqueeze(dim=0)
+        decoded = (net.decode(tarray).permute(0, 3, 1, 2).reshape(84*4, 84).numpy() * 255).astype(np.uint8)
+        img = Image.fromarray(decoded)
+        img.save(data_name + "sample_" + str(k) + ".png")
+    os.mkdir(data_name + "forward_dynamics")
+    for k in range(action_space_size):
+        for i in range(ENCODING_DIMS):
+            x[i] = np.random.randn() * 2
+        fwd_name = data_name + "forward_dynamics/action_" + str(k) + "/"
+        os.mkdir(fwd_name)
+        tarray = torch.FloatTensor(x).unsqueeze(dim=0)
+        actions = [0] * action_space_size
+        actions[k] = 1
+        taction = torch.FloatTensor(actions).unsqueeze(dim=0)
+        for l in range(11):
+            decoded = (net.decode(tarray).permute(0, 3, 1, 2).reshape(84*4, 84).numpy() * 255).astype(np.uint8)
+            img = Image.fromarray(decoded)
+            img.save(fwd_name + "index_" + str(l) + ".png")
+            tarray = net.forward_dynamics(tarray, taction)
+
+    tarray = torch.FloatTensor(x).unsqueeze(dim=0)
+    zero_out = (net.decode(tarray).permute(0, 3, 1, 2).reshape(84*4, 84).numpy() * 255).astype(np.uint8)
+    best_dims = []
+    for dim in range(ENCODING_DIMS):
+        for i in range(ENCODING_DIMS):
+            x[i] = 0
+        total_diff = 0
+        for v in np.linspace(-12, 12, 4):
+            x[dim] = v
+            tarray = torch.FloatTensor(x).unsqueeze(dim=0)
+            decoded = (net.decode(tarray).permute(0, 3, 1, 2).reshape(84*4, 84).numpy() * 255).astype(np.uint8)
+            total_diff += np.sum(np.absolute(zero_out - decoded))
+        best_dims.append((dim, total_diff))
+    best_dims.sort(key=lambda k: -k[1])
+    with open(data_name + "best_dims.txt", "w") as f:
+        f.write(str(best_dims))
+
+    os.mkdir(data_name + "special_dims")
+    special = []
+    if "spaceinvaders" in data_name:
+        special = [53, 1]
+
+    for m in range(5):
+        if best_dims[m][0] not in special:
+            special.append(best_dims[m][0])
+
+    for sp in special:
+        spdir = data_name + "special_dims/" + str(sp) + "/"
+        os.mkdir(spdir)
+        for i in range(ENCODING_DIMS):
+            x[i] = 0
+        index = 0
+        for v in np.linspace(-12, 12, 400):
+            x[sp] = v
+            tarray = torch.FloatTensor(x).unsqueeze(dim=0)
+            decoded = (net.decode(tarray).permute(0, 3, 1, 2).reshape(84*4, 84).numpy() * 255).astype(np.uint8)
+            img = Image.fromarray(decoded)
+            img.save(spdir + str(index) + ".png")
+            index += 1
+"""
+
+"""
 #s = Style()
 #s.configure('My.Red', background='red')
 #s.configure('My.Blue', background='blue')
@@ -614,7 +777,7 @@ class Example(Frame):
             scale.pack()
         self.update_img()
 
-        """
+        " ""
         entry1 = Entry(frame1)
         entry1.pack(fill=X, padx=5, expand=True)
 
@@ -635,7 +798,7 @@ class Example(Frame):
 
         txt = Text(frame3)
         txt.pack(fill=BOTH, pady=5, padx=5, expand=True)
-        """
+        " ""
 
 
 def main():
@@ -648,6 +811,7 @@ def main():
 
 if __name__ == '__main__':
     main()
+"""
 
 """
 if __name__=="__main__":
