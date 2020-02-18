@@ -25,6 +25,10 @@ from baselines.common.trex_utils import preprocess
 
 
 def generate_debug_demos(env, env_name, agent, model_dir):
+    print("WRONG FUNCTION")
+    import sys
+    sys.exit()
+
     checkpoint_min = 200 #50
     checkpoint_max = 600
     checkpoint_step = 200 #50
@@ -92,6 +96,10 @@ def generate_debug_demos(env, env_name, agent, model_dir):
 
 
 def generate_novice_demos(env, env_name, agent, model_dir):
+    print("WRONG FUNCTION")
+    import sys
+    sys.exit()
+
     checkpoint_min = 50 #50
     checkpoint_max = 600
     checkpoint_step = 50 #50
@@ -184,7 +192,7 @@ def create_mcmc_likelihood_data(demonstrations):
 
 
 def predict_reward_sequence(net, traj):
-    device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+    device = torch.device("cpu") #"cuda:0" if torch.cuda.is_available() else "cpu")
     rewards_from_obs = []
     with torch.no_grad():
         for s in traj:
@@ -204,7 +212,7 @@ def print_traj_returns(reward_net, demonstrations):
 
 def calc_linearized_pairwise_ranking_loss(last_layer, pairwise_prefs, demo_cnts):
     '''use (i,j) indices and precomputed feature counts to do faster pairwise ranking loss'''
-    device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+    device = torch.device("cpu") #"cuda:0" if torch.cuda.is_available() else "cpu")
     # Assume that we are on a CUDA machine, then this should print a CUDA device:
     #print(device)
     #don't need any gradients
@@ -215,7 +223,7 @@ def calc_linearized_pairwise_ranking_loss(last_layer, pairwise_prefs, demo_cnts)
         linear, bias = list(last_layer.parameters())
         #print(linear)
         #print(bias)
-        weights = torch.cat((linear.squeeze(), bias)) #append bias and weights from last fc layer together
+        weights = linear.squeeze() #torch.cat((linear.squeeze(), bias)) #append bias and weights from last fc layer together
         #print('weights',weights)
         #print('demo_cnts', demo_cnts)
         demo_returns = torch.mv(demo_cnts, weights)
@@ -244,7 +252,7 @@ def calc_linearized_pairwise_ranking_loss(last_layer, pairwise_prefs, demo_cnts)
 def calc_pairwise_ranking_loss(reward_net, demo_pairs, preference_labels):
     '''sum over all pairwise demonstrations the softmax loss from T-REX and Christiano work'''
 
-    device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+    device = torch.device("cpu") #"cuda:0" if torch.cuda.is_available() else "cpu")
     # Assume that we are on a CUDA machine, then this should print a CUDA device:
     print(device)
     #don't need any gradients
@@ -282,7 +290,7 @@ def calc_pairwise_ranking_loss(reward_net, demo_pairs, preference_labels):
 
 def random_search(reward_net, demonstrations, num_trials, stdev = 0.1):
     '''hill climbing random search'''
-    device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+    device = torch.device("cpu") #"cuda:0" if torch.cuda.is_available() else "cpu")
 
     best_likelihood = -np.inf
     best_reward = copy.deepcopy(reward_net)
@@ -354,11 +362,11 @@ def compute_l1(last_layer):
     #    weights = torch.cat((linear.squeeze(), bias)).cpu().numpy()
     #print("output", np.sum(np.abs(weights)))
     with torch.no_grad():
-        return torch.norm(linear, p=2).numpy() #np.sum(np.abs(weights))
+        return torch.norm(linear, p=2).cpu().numpy() #np.sum(np.abs(weights))
 
 def mcmc_map_search(reward_net, demonstrations, pairwise_prefs, demo_cnts, num_steps, step_stdev, weight_output_filename, weight_init):
     '''run metropolis hastings MCMC and record weights in chain'''
-    device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+    device = torch.device("cpu") #"cuda:0" if torch.cuda.is_available() else "cpu")
     demo_pairs, preference_labels = create_mcmc_likelihood_data(demonstrations)
 
     writer = open(weight_output_filename,'w')
@@ -465,6 +473,7 @@ def mcmc_map_search(reward_net, demonstrations, pairwise_prefs, demo_cnts, num_s
             #accept always
             if args.debug:
                 print("accept")
+            #print("more likely, accept")
             accept_cnt += 1
             cur_reward = copy.deepcopy(proposal_reward)
             cur_loglik = prop_loglik
@@ -482,6 +491,7 @@ def mcmc_map_search(reward_net, demonstrations, pairwise_prefs, demo_cnts, num_s
         else:
             #accept with prob exp(prop_loglik - cur_loglik)
             if np.random.rand() < torch.exp(prop_loglik - cur_loglik).item():
+                #print("random accept")
                 #print()
                 #print("step", i)
                 if args.debug:
@@ -494,6 +504,7 @@ def mcmc_map_search(reward_net, demonstrations, pairwise_prefs, demo_cnts, num_s
                 #reject and stick with cur_reward
                 if args.debug:
                     print("reject")
+                #print("reject")
                 reject_cnt += 1
 
         #save chain of weights
@@ -553,6 +564,7 @@ if __name__=="__main__":
     env = VecFrameStack(env, 4)
     agent = PPO2Agent(env, env_type, stochastic)
 
+    """
     if args.debug:
         print("*"*30)
         print("*"*30)
@@ -562,23 +574,28 @@ if __name__=="__main__":
         demonstrations, learning_returns, learning_rewards = generate_debug_demos(env, env_name, agent, args.models_dir)
     else:
         demonstrations, learning_returns, learning_rewards = generate_novice_demos(env, env_name, agent, args.models_dir)
+    """
+    device = torch.device("cpu") #"cuda:0" if torch.cuda.is_available() else "cpu")
+    demonstrations = []
+    for x in range(60):
+        tensor = torch.FloatTensor([x/60.0, -x/60.0, 0]).to(device)
+        demonstrations.append(tensor)
 
     #sort the demonstrations according to ground truth reward to simulate ranked demos
 
-    print([a[0] for a in zip(learning_returns, demonstrations)])
-    demonstrations = [x for _, x in sorted(zip(learning_returns,demonstrations), key=lambda pair: pair[0])]
+    #print([a[0] for a in zip(learning_returns, demonstrations)])
+    #demonstrations = [x for _, x in sorted(zip(learning_returns,demonstrations), key=lambda pair: pair[0])]
 
-    sorted_returns = sorted(learning_returns)
-    print(sorted_returns)
+    #sorted_returns = sorted(learning_returns)
+    #print(sorted_returns)
 
 
     # Now we download a pretrained network to form \phi(s) the state features where the reward is now w^T \phi(s)
 
-    device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
     reward_net = Net()
-    reward_net.load_state_dict(torch.load(args.pretrained_network))
+    #reward_net.load_state_dict(torch.load(args.pretrained_network))
     #reinitialize last layer
-    num_features = reward_net.fc2.in_features
+    num_features = 3 #reward_net.fc2.in_features
 
     print("reward is linear combination of ", num_features, "features")
     reward_net.fc2 = nn.Linear(num_features, 1) #last layer just outputs the scalar reward = w^T \phi(s)
@@ -587,7 +604,7 @@ if __name__=="__main__":
     for param in reward_net.parameters():
         param.requires_gradient = False
     #get num_demos by num_features + 1 (bias) numpy array with (un-discounted) feature counts from pretrained network
-    demo_cnts = generate_feature_counts(demonstrations, reward_net)
+    demo_cnts = torch.stack(demonstrations).to(device) #generate_feature_counts(demonstrations, reward_net)
     print(demo_cnts)
     if args.plot:
         plotable_cnts = demo_cnts.cpu().numpy()
@@ -615,10 +632,10 @@ if __name__=="__main__":
     pairwise_prefs = []
     for i in range(len(demonstrations)):
         for j in range(i+1, len(demonstrations)):
-            if sorted_returns[i] < sorted_returns[j]:
+            if demonstrations[i][0] < demonstrations[j][0]:
                 pairwise_prefs.append((i,j))
             else: # they are equal
-                print("equal prefs", i, j, sorted_returns[i], sorted_returns[j])
+                #print("equal prefs", i, j, sorted_returns[i], sorted_returns[j])
                 pairwise_prefs.append((i,j))
                 pairwise_prefs.append((j,i))
 
@@ -627,12 +644,14 @@ if __name__=="__main__":
     #best_reward = random_search(reward_net, demonstrations, 40, stdev = 0.01)
     best_reward_lastlayer = mcmc_map_search(reward_net, demonstrations, pairwise_prefs, demo_cnts, args.num_mcmc_steps, args.mcmc_step_size, args.weight_outputfile, args.weight_init)
     #turn this into a full network
+    """
     best_reward = Net()
     best_reward.load_state_dict(torch.load(args.pretrained_network))
     best_reward.fc2 = best_reward_lastlayer
     best_reward.to(device)
     #save best reward network
     torch.save(best_reward.state_dict(), args.map_reward_model_path)
+    """
     demo_pairs, preference_labels = create_mcmc_likelihood_data(demonstrations)
     print("best reward ll", calc_pairwise_ranking_loss(best_reward, demo_pairs, preference_labels))
     print_traj_returns(best_reward, demonstrations)
