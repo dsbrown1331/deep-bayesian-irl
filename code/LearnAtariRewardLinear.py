@@ -544,7 +544,10 @@ if __name__=="__main__":
 
     lr = 0.0001
     weight_decay = 0.001
-    num_iter = 1 #num times through training data
+    if args.env_name == "enduro" and args.loss_fn == "trex+ss":
+        num_iter = 2
+    else:
+        num_iter = 1 #num times through training data
     l1_reg=0.0
     stochastic = True
 
