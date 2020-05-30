@@ -211,14 +211,14 @@ def write_weights_likelihood(np_weights, loglik, file_writer):
         file_writer.write(str(w)+",")
     file_writer.write(str(loglik) + "\n")
 
-def compute_l1(last_layer):
+def compute_l2(last_layer):
     linear, bias = list(last_layer.parameters())
     #print(linear)
     #print(bias)
     with torch.no_grad():
         weights = torch.cat((linear.squeeze(), bias)).cpu().numpy()
     #print("output", np.sum(np.abs(weights)))
-    return np.sum(np.abs(weights))
+    return np.linalg.norm(weights)#np.sum(np.abs(weights))
 
 def mcmc_map_search(pairwise_prefs, demo_cnts, num_steps, step_stdev, weight_output_filename, weight_init):
     '''run metropolis hastings MCMC and record weights in chain'''
@@ -246,8 +246,8 @@ def mcmc_map_search(pairwise_prefs, demo_cnts, num_steps, step_stdev, weight_out
         sys.exit()
 
     #normalize the weight vector to have unit 1-norm...why not unit 2-norm, WCFB won't work without expert...I guess we could do D-REX and estimate
-    #last_layer = last_layer / np.sum(np.abs(last_layer))
-    last_layer = euclidean_proj_l1ball(last_layer)
+    last_layer = last_layer / np.linalg.norm(last_layer)
+    #last_layer = euclidean_proj_l1ball(last_layer)
     if args.debug:
         print("normalized last layer", np.sum(np.abs(last_layer)))
         print("weights", last_layer)
@@ -281,8 +281,8 @@ def mcmc_map_search(pairwise_prefs, demo_cnts, num_steps, step_stdev, weight_out
         proposal_reward = cur_reward + np.random.normal(size=cur_reward.shape) * step_stdev #add random noise to weights of last layer
         #project
         #print("before", proposal_reward)
-        #proposal_reward = proposal_reward / np.sum(np.abs(proposal_reward))#
-        proposal_reward = euclidean_proj_l1ball(proposal_reward)
+        proposal_reward = proposal_reward / np.linalg.norm(proposal_reward)
+        #proposal_reward = euclidean_proj_l1ball(proposal_reward)
         if args.debug:
             print("after", proposal_reward)
         #print("normalized last layer", np.sum(np.abs(proposal_reward)))
@@ -348,6 +348,7 @@ if __name__=="__main__":
     parser.add_argument('--debug', help='use fewer demos to speed things up while debugging', action='store_true' )
     parser.add_argument('--plot', help='plot out the feature counts over time for demos', action='store_true' )
     parser.add_argument('--weight_init', help="defaults to randn, specify integer value to start in a corner of L1-sphere", default="randn")
+    parser.add_argument('--confidence', default=1, type=int, help='confidence in rankings, affects the beta parameter in the softmax')
 
     args = parser.parse_args()
 
@@ -394,23 +395,22 @@ if __name__=="__main__":
     #                     [0. ,2226. , 39. ]])
 
     #enduro terminal truncated
-    demo_cnts = np.array([[51., 2898.,   51.,    0.],
-                         [45., 2902.,   53.,    0.],
-                         [39., 2896.,   65.,    0.],
-                         [46., 2876.,   78.,    0.],
-                         [64., 2862.,   74.,    0.],
-                         [34., 2916.,   50.,    0.],
-                         [39., 2896.,   65.,    0.],
-                         [47., 2858.,   95.,    0.],
-                         [39., 2890.,   71.,    0.],
-                         [42., 2869.,   89.,    0.],
-                         [44., 2846.,  110.,    0.],
-                         [36., 2868.,   96.,    0.]])
+    # demo_cnts = np.array([[1., 4.,   20.,    0.],
+    #                       [2., 3.,   30.,    0.],
+    #                       [3., 2.,   40.,    0.],
+    #                       [4., 1.,   50.,    0.]])
+    demo_cnts = np.array([[1., 4.,  0.],
+                          [2., 3.,  0.],
+                          [3., 2.,  0.],
+                          [4., 1.,  0.]])
+
     #print("mean", np.mean(demo_cnts, axis = 0))
     #demo_cnts[:,1:] = demo_cnts[:,1:] / np.mean(demo_cnts[:,1:], axis = 0)
     print(demo_cnts)
-    true_weights = np.array([-1,0,1, 0])
-    sorted_returns = np.dot(demo_cnts, true_weights)
+    #TODO: These determine the "ground-truth" ranking for the demos.
+    #true_weights = np.array([1,-1,1, 0])
+    true_weights = np.array([1,-1, 0])
+    sorted_returns = args.confidence * np.dot(demo_cnts, true_weights)
     print("returns", sorted_returns)
 
     if args.plot:

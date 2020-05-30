@@ -7,7 +7,7 @@ import matplotlib.pyplot as plt
 
 
 parser = argparse.ArgumentParser(description=None)
-parser.add_argument('--env_name', help="name of the environment, e.g. 'breakout'")
+parser.add_argument('--env_name', default='breakout', help="name of the environment, e.g. 'breakout'")
 parser.add_argument('--mcmc_file', help="name of mcmc file for chain")
 parser.add_argument('--alpha', type=float, help="value of alpha-VaR, e.g. alpha = 0.05")
 parser.add_argument('--identifier', help="keyword to find correct fcount files")
@@ -34,15 +34,18 @@ if args.env_name == "enduro":
 gt_return_list = []
 fcount_list = []
 return_dist_list = []
-print(" policy & mean & " + str(args.alpha) + "-VaR  & gt & min gt & Length \\\\ \hline")
+print(" policy & mean & " + str(args.alpha) + "-VaR  & gt & Length \\\\ \hline")
 for eval in eval_policies:
     #print("-"*20)
     #print("eval", eval)
+    #if eval == "no-op":
+#        fcounts, returns, lengths, all_fcounts = helper.parse_fcount_policy_eval('../../policies/breakout_noopp_64_all.params_stripped.params_fcounts_auxiliary.txt')
+#    else:
     fcounts, returns, lengths, all_fcounts = helper.parse_fcount_policy_eval('../../policies/' + args.env_name +'_' + eval + args.identifier + '.params_stripped.params_fcounts_auxiliary.txt')
     return_dist = np.dot(W,fcounts)
     #print(return_dist[:200])
     #input()
-    print("{} & {:.1f} & {:.1f}  & {:.1f} & {:.0f} & {:.1f}  \\\\".format(name_transform[eval], np.mean(return_dist), helper.worst_percentile(return_dist, args.alpha), np.mean(returns), np.min(returns), np.mean(lengths)))
+    print("{} & {:.1f} & {:.1f}  & {:.1f} & {:.1f}  \\\\".format(name_transform[eval], np.mean(return_dist), helper.worst_percentile(return_dist, args.alpha), np.mean(returns), np.mean(lengths)))
 
 
 

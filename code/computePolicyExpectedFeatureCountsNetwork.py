@@ -76,7 +76,7 @@ def get_policy_feature_counts(env_name, checkpointpath, feature_net, num_rollout
         #print(ob.shape)
         steps = 0
         acc_reward = 0
-        while True:
+        while True:#steps < 7000:
             if no_op:
                 action = 0
             else:
@@ -144,6 +144,8 @@ if __name__=="__main__":
     print("Using network at", network_file_loc, "for features.")
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
     feature_net = EmbeddingNet(args.encoding_dims)
+    state_dict = torch.load(network_file_loc, map_location=device)
+    print(state_dict.keys())
     feature_net.load_state_dict(torch.load(network_file_loc, map_location=device))
     feature_net.to(device)
 

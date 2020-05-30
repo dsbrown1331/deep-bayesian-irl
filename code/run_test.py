@@ -58,8 +58,15 @@ if __name__ == '__main__':
     parser.add_argument('--episode_count', default=100)
     parser.add_argument('--record_video', action='store_true')
     parser.add_argument('--render', action='store_true')
+    parser.add_argument('--seed', default = 1234, type=int)
+    parser.add_argument('--no_op', action='store_true')
 
     args = parser.parse_args()
+
+
+    seed = int(args.seed)
+    np.random.seed(seed)
+    tf.set_random_seed(seed)
 
     stochastic = True #it helps Atari policies to not get stuck if there is a little noise
 
@@ -90,9 +97,10 @@ if __name__ == '__main__':
     except AttributeError:
         pass
 
-    agent = PPO2Agent(env,args.env_type, stochastic)
-    agent.load(args.model_path)
-    #agent = RandomAgent(env.action_space)
+    if not args.no_op:
+        agent = PPO2Agent(env,args.env_type, stochastic)
+        agent.load(args.model_path)
+        #agent = RandomAgent(env.action_space)
 
     episode_count = args.episode_count
     reward = 0
@@ -105,9 +113,11 @@ if __name__ == '__main__':
         ob = env.reset()
         steps = 0
         acc_reward = 0
-        while True:
-
-            action = agent.act(ob, reward, done)
+        while steps < 7000:
+            if args.no_op:
+                action = 0
+            else:
+                action = agent.act(ob, reward, done)
             #action = env.action_space.sample()
             ob, reward, done, _ = env.step(action)
             if args.render:

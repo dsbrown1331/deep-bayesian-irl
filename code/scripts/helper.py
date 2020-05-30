@@ -97,6 +97,12 @@ def worst_percentile(_sequence, alpha):
         return sorted_seq[-1]
     return sorted_seq[alpha_indx]
 
+def average_var(_sequence, alpha):
+    sorted_seq = sorted(_sequence)
+    #find alpha percentile
+    alpha_indx = int(np.floor(alpha * len(_sequence)))
+    return np.mean(sorted_seq[:alpha_indx])
+
 if __name__=="__main__":
     #debug
     avef, returns, lengths, fcounts = parse_fcount_policy_eval("/home/dsbrown/Code/deep-bayesian-irl/policies/test.txtbreakout_00025_64_all.params_stripped.params_fcounts_auxiliary.txt")
