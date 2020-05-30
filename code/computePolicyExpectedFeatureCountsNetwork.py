@@ -151,8 +151,12 @@ if __name__=="__main__":
         checkpointpath = None
     elif args.rl_eval:
         checkpointpath = '/scratch/cluster/dsbrown/tflogs/rl/' + env_name + '_0/checkpoints/' + output_id
-    elif output_id == 'mean' or output_id == 'map':
-        checkpointpath = '/scratch/cluster/dsbrown/tflogs/mcmc/' + env_name + '_linear_' + output_id + '_0/checkpoints/43000'
+    elif output_id == 'map':
+        #checkpointpath = '/scratch/cluster/dsbrown/tflogs/mcmc/' + env_name + '_linear_' + output_id + '_0/checkpoints/43000'
+        checkpointpath = '/scratch/cluster/dsbrown/tflogs/mcmc/' + env_name + '_64_all/checkpoints/43000'
+    elif output_id == 'mean':
+        #checkpointpath = '/scratch/cluster/dsbrown/tflogs/mcmc/' + env_name + '_linear_' + output_id + '_0/checkpoints/43000'
+        checkpointpath = '/scratch/cluster/dsbrown/tflogs/mcmc/' + env_name + '_64_all_mean/checkpoints/43000'
     else:
         #checkpointpath = '../../learning-rewards-of-learners/learner/models/' + env_name + '_25/' + output_id
         checkpointpath = '/scratch/cluster/dsbrown/models/' + env_name + '_25/' + output_id

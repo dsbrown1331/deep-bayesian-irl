@@ -17,6 +17,7 @@ import random
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
+torch.set_num_threads(2)
 #from torchvision.utils import save_image
 from run_test import *
 from baselines.common.trex_utils import preprocess
@@ -416,9 +417,11 @@ def learn_reward(reward_network, optimizer, training_inputs, training_outputs, t
             if loss_fn == "trex": #only use trex loss
                 loss = trex_loss
             elif loss_fn == "ss": #only use self-supervised loss
-                loss = dt_loss_i + dt_loss_j + (inverse_dynamics_loss_1 + inverse_dynamics_loss_2) + forward_dynamics_loss_1 + forward_dynamics_loss_2 + reconstruction_loss_1 + reconstruction_loss_2
+                loss = (inverse_dynamics_loss_1 + inverse_dynamics_loss_2) + forward_dynamics_loss_1 + forward_dynamics_loss_2 + reconstruction_loss_1 + reconstruction_loss_2
+                #loss = dt_loss_i + dt_loss_j + (inverse_dynamics_loss_1 + inverse_dynamics_loss_2) + forward_dynamics_loss_1 + forward_dynamics_loss_2 + reconstruction_loss_1 + reconstruction_loss_2
             elif loss_fn == "trex+ss":
-                loss = dt_loss_i + dt_loss_j + (inverse_dynamics_loss_1 + inverse_dynamics_loss_2) + forward_dynamics_loss_1 + forward_dynamics_loss_2 + reconstruction_loss_1 + reconstruction_loss_2 + trex_loss
+                loss = (inverse_dynamics_loss_1 + inverse_dynamics_loss_2) + forward_dynamics_loss_1 + forward_dynamics_loss_2 + reconstruction_loss_1 + reconstruction_loss_2 + trex_loss
+                #loss = dt_loss_i + dt_loss_j + (inverse_dynamics_loss_1 + inverse_dynamics_loss_2) + forward_dynamics_loss_1 + forward_dynamics_loss_2 + reconstruction_loss_1 + reconstruction_loss_2 + trex_loss
             #if i < len(training_labels) * validation_split:
                 #print("TRAINING LOSS", end=" ")
             #    pass
