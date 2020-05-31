@@ -1,0 +1,2 @@
+conda activate baselines_rl
+OPENAI_LOG_FORMAT='stdout,log,csv,tensorboard' OPENAI_LOGDIR=/scratch/cluster/dsbrown/tflogs/mcdropout/spaceinvaders_snippet python -m baselines.run --alg=ppo2 --env=SpaceInvadersNoFrameskip-v4 --custom_reward pytorch --custom_reward_path /scratch/cluster/dsbrown/pretrained_networks/dropout_snippets/spaceinvaders_snippets.params --seed 0 --num_timesteps=5e7  --save_interval=43000
