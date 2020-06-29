@@ -27,10 +27,17 @@ def generate_dropout_distribution_checkpoint(env, env_name, agent, checkpoint_mo
     #if env_name == "seaquest":
     #    model_path = model_dir + "/models/" + env_name + "_5/" + checkpoint
 
+
     agent.load(model_path)
     episode_count = num_rollouts
     for i in range(episode_count):
         dropout_rets = np.zeros(num_dropout_samples)
+
+        #generate masks one for each dropout and keep them fixed for trajectories
+        dropout_masks = []
+        for d in range(num_dropout_samples):
+            dropout_masks.append( dropout_net.cum_return(ob_processed)[2] )
+
         done = False
         traj = []
         r = 0
@@ -45,7 +52,7 @@ def generate_dropout_distribution_checkpoint(env, env_name, agent, checkpoint_mo
             #ob_processed = ob_processed #get rid of first dimension ob.shape = (1,84,84,4)
             ob_processed = torch.from_numpy(ob_processed).float().to(device)
             for d in range(num_dropout_samples):
-                dropout_rets[d] += dropout_net.cum_return(ob_processed)[0].item()
+                dropout_rets[d] += dropout_net.cum_return(ob_processed, mask=dropout_masks[d])[0].item()
 
             del ob_processed
             steps += 1
