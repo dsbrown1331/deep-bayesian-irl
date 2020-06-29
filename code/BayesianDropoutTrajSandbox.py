@@ -78,12 +78,17 @@ def generate_dropout_distribution_framestack(env, env_name, framestack_path, dro
     #load the framestack
     trajectory = np.load(framestack_path)
 
+    #generate masks one for each dropout and keep them fixed for trajectories
+    dropout_masks = []
+    for d in range(num_dropout_samples):
+        dropout_masks.append( dropout_net.cum_return(ob_processed)[2] )
+
     for i in range(min(time_limit, len(trajectory))):
         ob = trajectory[i]
         ob_processed = preprocess(ob, env_name)
         ob_processed = torch.from_numpy(ob_processed).float().to(device)
         for d in range(num_dropout_samples):
-            dropout_rets[d] += dropout_net.cum_return(ob_processed)[0].item()
+            dropout_rets[d] += dropout_net.cum_return(ob_processed, mask=dropout_mask[d])[0].item()
 
         del ob_processed
 
@@ -124,6 +129,7 @@ def generate_dropout_distribution(env, env_name, agent, model_dir, checkpoint, d
         done = False
         traj = []
         r = 0
+
 
         ob = env.reset()
         steps = 0
@@ -167,6 +173,11 @@ def generate_dropout_distribution_noop(env, env_name, agent, dropout_net, num_dr
         traj = []
         r = 0
 
+        #generate masks one for each dropout and keep them fixed for trajectories
+        dropout_masks = []
+        for d in range(num_dropout_samples):
+            dropout_masks.append( dropout_net.cum_return(ob_processed)[2] )
+
         ob = env.reset()
         steps = 0
         acc_reward = 0
@@ -177,7 +188,7 @@ def generate_dropout_distribution_noop(env, env_name, agent, dropout_net, num_dr
             #ob_processed = ob_processed #get rid of first dimension ob.shape = (1,84,84,4)
             ob_processed = torch.from_numpy(ob_processed).float().to(device)
             for d in range(num_dropout_samples):
-                dropout_returns[d] += dropout_net.cum_return(ob_processed)[0].item()
+                dropout_returns[d] += dropout_net.cum_return(ob_processed, mask=dropout_masks[d])[0].item()
 
             steps += 1
             if steps % 1000 == 0:
