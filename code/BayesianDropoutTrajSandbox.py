@@ -33,10 +33,7 @@ def generate_dropout_distribution_checkpoint(env, env_name, agent, checkpoint_mo
     for i in range(episode_count):
         dropout_rets = np.zeros(num_dropout_samples)
 
-        #generate masks one for each dropout and keep them fixed for trajectories
         dropout_masks = []
-        for d in range(num_dropout_samples):
-            dropout_masks.append( dropout_net.cum_return(ob_processed)[2] )
 
         done = False
         traj = []
@@ -49,6 +46,11 @@ def generate_dropout_distribution_checkpoint(env, env_name, agent, checkpoint_mo
             action = agent.act(ob, r, done)
             ob, r, done, _ = env.step(action)
             ob_processed = preprocess(ob, env_name)
+            if steps == 0:
+                #generate masks one for each dropout and keep them fixed for trajectories
+                for d in range(num_dropout_samples):
+                    dropout_masks.append( dropout_net.cum_return(ob_processed)[2] )
+
             #ob_processed = ob_processed #get rid of first dimension ob.shape = (1,84,84,4)
             ob_processed = torch.from_numpy(ob_processed).float().to(device)
             for d in range(num_dropout_samples):
@@ -80,13 +82,16 @@ def generate_dropout_distribution_framestack(env, env_name, framestack_path, dro
 
     #generate masks one for each dropout and keep them fixed for trajectories
     dropout_masks = []
-    for d in range(num_dropout_samples):
-        dropout_masks.append( dropout_net.cum_return(ob_processed)[2] )
 
     for i in range(min(time_limit, len(trajectory))):
         ob = trajectory[i]
         ob_processed = preprocess(ob, env_name)
         ob_processed = torch.from_numpy(ob_processed).float().to(device)
+
+        if i == 0:
+            for d in range(num_dropout_samples):
+                dropout_masks.append( dropout_net.cum_return(ob_processed)[2] )
+
         for d in range(num_dropout_samples):
             dropout_rets[d] += dropout_net.cum_return(ob_processed, mask=dropout_mask[d])[0].item()
 
@@ -175,8 +180,6 @@ def generate_dropout_distribution_noop(env, env_name, agent, dropout_net, num_dr
 
         #generate masks one for each dropout and keep them fixed for trajectories
         dropout_masks = []
-        for d in range(num_dropout_samples):
-            dropout_masks.append( dropout_net.cum_return(ob_processed)[2] )
 
         ob = env.reset()
         steps = 0
@@ -187,6 +190,11 @@ def generate_dropout_distribution_noop(env, env_name, agent, dropout_net, num_dr
             ob_processed = preprocess(ob, env_name)
             #ob_processed = ob_processed #get rid of first dimension ob.shape = (1,84,84,4)
             ob_processed = torch.from_numpy(ob_processed).float().to(device)
+
+            if steps == 0:
+                for d in range(num_dropout_samples):
+                    dropout_masks.append( dropout_net.cum_return(ob_processed)[2] )
+
             for d in range(num_dropout_samples):
                 dropout_returns[d] += dropout_net.cum_return(ob_processed, mask=dropout_masks[d])[0].item()
 
