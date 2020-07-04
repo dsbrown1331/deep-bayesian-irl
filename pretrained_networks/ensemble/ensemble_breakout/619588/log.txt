@@ -1,0 +1,965 @@
+Logging to C:\Users\RUSSEL~1\AppData\Local\Temp\openai-2020-04-13-21-59-57-265365
+atari
+Training reward for BreakoutNoFrameskip-v4
+['00050', '00100', '00150', '00200', '00250', '00300', '00350', '00400', '00450', '00500', '00550', '00600']
+checkpoint: 00050, steps: 478, return: 8.0
+traj length 478
+demo length 0
+checkpoint: 00100, steps: 137, return: 0.0
+traj length 137
+demo length 1
+checkpoint: 00150, steps: 264, return: 3.0
+traj length 264
+demo length 2
+checkpoint: 00200, steps: 413, return: 8.0
+traj length 413
+demo length 3
+checkpoint: 00250, steps: 510, return: 10.0
+traj length 510
+demo length 4
+checkpoint: 00300, steps: 731, return: 23.0
+traj length 731
+demo length 5
+checkpoint: 00350, steps: 640, return: 14.0
+traj length 640
+demo length 6
+checkpoint: 00400, steps: 705, return: 16.0
+traj length 705
+demo length 7
+checkpoint: 00450, steps: 725, return: 21.0
+traj length 725
+demo length 8
+checkpoint: 00500, steps: 739, return: 20.0
+traj length 739
+demo length 9
+checkpoint: 00550, steps: 720, return: 17.0
+traj length 720
+demo length 10
+checkpoint: 00600, steps: 815, return: 19.0
+traj length 815
+demo length 11
+Resetting seed...
+demo lengths [478, 137, 264, 413, 510, 731, 640, 705, 725, 739, 720, 815]
+max snippet length 100
+12
+12
+[8.0, 0.0, 3.0, 8.0, 10.0, 23.0, 14.0, 16.0, 21.0, 20.0, 17.0, 19.0]
+[0.0, 3.0, 8.0, 8.0, 10.0, 14.0, 16.0, 17.0, 19.0, 20.0, 21.0, 23.0]
+maximum traj length 50
+num training_obs 6000
+num_labels 6000
+cuda:0
+epoch 0:99 loss 66.52033174037933
+tensor(10.2856, device='cuda:0', grad_fn=<AddBackward0>)
+check pointing
+epoch 0:199 loss 42.69115233421326
+tensor(16.6402, device='cuda:0', grad_fn=<AddBackward0>)
+check pointing
+epoch 0:299 loss 25.354944229125977
+tensor(13.2700, device='cuda:0', grad_fn=<AddBackward0>)
+check pointing
+epoch 0:399 loss 21.555743664503098
+tensor(12.0359, device='cuda:0', grad_fn=<AddBackward0>)
+check pointing
+epoch 0:499 loss 16.970992743968964
+tensor(20.7899, device='cuda:0', grad_fn=<AddBackward0>)
+check pointing
+epoch 0:599 loss 15.190285801887512
+tensor(15.8797, device='cuda:0', grad_fn=<AddBackward0>)
+check pointing
+epoch 0:699 loss 17.75797861814499
+tensor(33.1952, device='cuda:0', grad_fn=<AddBackward0>)
+check pointing
+epoch 0:799 loss 15.062264859676361
+tensor(17.6737, device='cuda:0', grad_fn=<AddBackward0>)
+check pointing
+epoch 0:899 loss 14.399117976427078
+tensor(22.0967, device='cuda:0', grad_fn=<AddBackward0>)
+check pointing
+epoch 0:999 loss 8.463108539581299
+tensor(33.5629, device='cuda:0', grad_fn=<AddBackward0>)
+check pointing
+epoch 0:1099 loss 15.785862140357494
+tensor(26.5126, device='cuda:0', grad_fn=<AddBackward0>)
+check pointing
+epoch 0:1199 loss 9.975126385688782
+tensor(26.8088, device='cuda:0', grad_fn=<AddBackward0>)
+check pointing
+epoch 0:1299 loss 13.778816223144531
+tensor(15.8324, device='cuda:0', grad_fn=<AddBackward0>)
+check pointing
+epoch 0:1399 loss 12.57164192199707
+tensor(38.5529, device='cuda:0', grad_fn=<AddBackward0>)
+check pointing
+epoch 0:1499 loss 14.910115245729685
+tensor(47.2175, device='cuda:0', grad_fn=<AddBackward0>)
+check pointing
+epoch 0:1599 loss 7.499717712402344
+tensor(32.2139, device='cuda:0', grad_fn=<AddBackward0>)
+check pointing
+epoch 0:1699 loss 6.127745151519775
+tensor(40.0032, device='cuda:0', grad_fn=<AddBackward0>)
+check pointing
+epoch 0:1799 loss 7.243423968553543
+tensor(22.9064, device='cuda:0', grad_fn=<AddBackward0>)
+check pointing
+epoch 0:1899 loss 7.479743987321854
+tensor(24.6448, device='cuda:0', grad_fn=<AddBackward0>)
+check pointing
+epoch 0:1999 loss 8.794960379600525
+tensor(40.0829, device='cuda:0', grad_fn=<AddBackward0>)
+check pointing
+epoch 0:2099 loss 3.779421329498291
+tensor(73.4771, device='cuda:0', grad_fn=<AddBackward0>)
+check pointing
+epoch 0:2199 loss 6.259621620178223
+tensor(67.2416, device='cuda:0', grad_fn=<AddBackward0>)
+check pointing
+epoch 0:2299 loss 8.896273970603943
+tensor(31.2824, device='cuda:0', grad_fn=<AddBackward0>)
+check pointing
+epoch 0:2399 loss 5.279009699821472
+tensor(56.0936, device='cuda:0', grad_fn=<AddBackward0>)
+check pointing
+epoch 0:2499 loss 2.5083353519439697
+tensor(38.0132, device='cuda:0', grad_fn=<AddBackward0>)
+check pointing
+epoch 0:2599 loss 4.2661309242248535
+tensor(71.5854, device='cuda:0', grad_fn=<AddBackward0>)
+check pointing
+epoch 0:2699 loss 5.642127990722656
+tensor(56.4733, device='cuda:0', grad_fn=<AddBackward0>)
+check pointing
+epoch 0:2799 loss 2.8426551818847656
+tensor(45.9735, device='cuda:0', grad_fn=<AddBackward0>)
+check pointing
+epoch 0:2899 loss 4.092512786388397
+tensor(13.0584, device='cuda:0', grad_fn=<AddBackward0>)
+check pointing
+epoch 0:2999 loss 4.45425346493721
+tensor(11.1278, device='cuda:0', grad_fn=<AddBackward0>)
+check pointing
+epoch 0:3099 loss 3.177778333425522
+tensor(10.7405, device='cuda:0', grad_fn=<AddBackward0>)
+check pointing
+epoch 0:3199 loss 6.50216606259346
+tensor(58.4332, device='cuda:0', grad_fn=<AddBackward0>)
+check pointing
+epoch 0:3299 loss 5.620468616485596
+tensor(24.2225, device='cuda:0', grad_fn=<AddBackward0>)
+check pointing
+epoch 0:3399 loss 3.913684606552124
+tensor(47.1145, device='cuda:0', grad_fn=<AddBackward0>)
+check pointing
+epoch 0:3499 loss 2.4564449787139893
+tensor(67.0528, device='cuda:0', grad_fn=<AddBackward0>)
+check pointing
+epoch 0:3599 loss 1.6441192626953125
+tensor(59.5477, device='cuda:0', grad_fn=<AddBackward0>)
+check pointing
+epoch 0:3699 loss 6.346696257591248
+tensor(50.6744, device='cuda:0', grad_fn=<AddBackward0>)
+check pointing
+epoch 0:3799 loss 2.793285444378853
+tensor(51.8927, device='cuda:0', grad_fn=<AddBackward0>)
+check pointing
+epoch 0:3899 loss 1.5675439834594727
+tensor(96.4171, device='cuda:0', grad_fn=<AddBackward0>)
+check pointing
+epoch 0:3999 loss 0.9188976287841797
+tensor(79.4194, device='cuda:0', grad_fn=<AddBackward0>)
+check pointing
+epoch 0:4099 loss 2.781078338623047
+tensor(67.5146, device='cuda:0', grad_fn=<AddBackward0>)
+check pointing
+epoch 0:4199 loss 3.663576126098633
+tensor(66.4447, device='cuda:0', grad_fn=<AddBackward0>)
+check pointing
+epoch 0:4299 loss 5.382030487060547
+tensor(37.1577, device='cuda:0', grad_fn=<AddBackward0>)
+check pointing
+epoch 0:4399 loss 2.9329299926757812
+tensor(82.1439, device='cuda:0', grad_fn=<AddBackward0>)
+check pointing
+epoch 0:4499 loss 1.8141441345214844
+tensor(91.3542, device='cuda:0', grad_fn=<AddBackward0>)
+check pointing
+epoch 0:4599 loss 2.011776924133301
+tensor(123.4369, device='cuda:0', grad_fn=<AddBackward0>)
+check pointing
+epoch 0:4699 loss 1.3078746795654297
+tensor(80.3379, device='cuda:0', grad_fn=<AddBackward0>)
+check pointing
+epoch 0:4799 loss 1.1534738540649414
+tensor(91.0224, device='cuda:0', grad_fn=<AddBackward0>)
+check pointing
+epoch 0:4899 loss 1.0756616592407227
+tensor(82.0277, device='cuda:0', grad_fn=<AddBackward0>)
+check pointing
+epoch 0:4999 loss 2.1528520584106445
+tensor(24.2985, device='cuda:0', grad_fn=<AddBackward0>)
+check pointing
+epoch 0:5099 loss 0.24061203002929688
+tensor(70.7252, device='cuda:0', grad_fn=<AddBackward0>)
+check pointing
+epoch 0:5199 loss 1.508368968963623
+tensor(62.4734, device='cuda:0', grad_fn=<AddBackward0>)
+check pointing
+epoch 0:5299 loss 2.0525636672973633
+tensor(111.0947, device='cuda:0', grad_fn=<AddBackward0>)
+check pointing
+epoch 0:5399 loss 4.118192672729492
+tensor(55.6121, device='cuda:0', grad_fn=<AddBackward0>)
+check pointing
+epoch 0:5499 loss 2.7220855057239532
+tensor(80.3391, device='cuda:0', grad_fn=<AddBackward0>)
+check pointing
+epoch 0:5599 loss 0.8648189306259155
+tensor(32.4619, device='cuda:0', grad_fn=<AddBackward0>)
+check pointing
+epoch 0:5699 loss 1.1169441938400269
+tensor(18.3806, device='cuda:0', grad_fn=<AddBackward0>)
+check pointing
+epoch 0:5799 loss 3.5508516430854797
+tensor(38.2742, device='cuda:0', grad_fn=<AddBackward0>)
+check pointing
+epoch 0:5899 loss 1.0257482528686523
+tensor(25.7402, device='cuda:0', grad_fn=<AddBackward0>)
+check pointing
+epoch 0:5999 loss 1.8341587483882904
+tensor(29.2350, device='cuda:0', grad_fn=<AddBackward0>)
+check pointing
+epoch 1:99 loss 1.5030221343040466
+tensor(71.7455, device='cuda:0', grad_fn=<AddBackward0>)
+check pointing
+epoch 1:199 loss 0.2633659839630127
+tensor(100.9966, device='cuda:0', grad_fn=<AddBackward0>)
+check pointing
+epoch 1:299 loss 1.5108764171600342
+tensor(62.2891, device='cuda:0', grad_fn=<AddBackward0>)
+check pointing
+epoch 1:399 loss 1.734938621520996
+tensor(118.5696, device='cuda:0', grad_fn=<AddBackward0>)
+check pointing
+epoch 1:499 loss 2.8489242792129517
+tensor(58.6684, device='cuda:0', grad_fn=<AddBackward0>)
+check pointing
+epoch 1:599 loss 1.6336963176727295
+tensor(96.0070, device='cuda:0', grad_fn=<AddBackward0>)
+check pointing
+epoch 1:699 loss 3.3998442888259888
+tensor(7.7210, device='cuda:0', grad_fn=<AddBackward0>)
+check pointing
+epoch 1:799 loss 0.41474056243896484
+tensor(48.1137, device='cuda:0', grad_fn=<AddBackward0>)
+check pointing
+epoch 1:899 loss 0.5994582176208496
+tensor(91.0722, device='cuda:0', grad_fn=<AddBackward0>)
+check pointing
+epoch 1:999 loss 1.110248327255249
+tensor(22.4472, device='cuda:0', grad_fn=<AddBackward0>)
+check pointing
+epoch 1:1099 loss 0.4604036808013916
+tensor(64.1781, device='cuda:0', grad_fn=<AddBackward0>)
+check pointing
+epoch 1:1199 loss 0.27656257152557373
+tensor(40.3801, device='cuda:0', grad_fn=<AddBackward0>)
+check pointing
+epoch 1:1299 loss 1.5224683284759521
+tensor(71.7289, device='cuda:0', grad_fn=<AddBackward0>)
+check pointing
+epoch 1:1399 loss 2.9778218865394592
+tensor(75.1004, device='cuda:0', grad_fn=<AddBackward0>)
+check pointing
+epoch 1:1499 loss 0.5465729236602783
+tensor(45.1631, device='cuda:0', grad_fn=<AddBackward0>)
+check pointing
+epoch 1:1599 loss 0.9826672077178955
+tensor(117.7400, device='cuda:0', grad_fn=<AddBackward0>)
+check pointing
+epoch 1:1699 loss 0.9021871089935303
+tensor(81.7365, device='cuda:0', grad_fn=<AddBackward0>)
+check pointing
+epoch 1:1799 loss 0.9302356243133545
+tensor(118.7369, device='cuda:0', grad_fn=<AddBackward0>)
+check pointing
+epoch 1:1899 loss 1.7683534622192383
+tensor(89.5330, device='cuda:0', grad_fn=<AddBackward0>)
+check pointing
+epoch 1:1999 loss 0.5063439607620239
+tensor(31.0012, device='cuda:0', grad_fn=<AddBackward0>)
+check pointing
+epoch 1:2099 loss 0.1095426082611084
+tensor(47.0047, device='cuda:0', grad_fn=<AddBackward0>)
+check pointing
+epoch 1:2199 loss 9.168439745903015
+tensor(52.6956, device='cuda:0', grad_fn=<AddBackward0>)
+check pointing
+epoch 1:2299 loss 5.478221416473389
+tensor(99.5803, device='cuda:0', grad_fn=<AddBackward0>)
+check pointing
+epoch 1:2399 loss 0.9331907629966736
+tensor(51.4688, device='cuda:0', grad_fn=<AddBackward0>)
+check pointing
+epoch 1:2499 loss 0.8851766586303711
+tensor(29.6052, device='cuda:0', grad_fn=<AddBackward0>)
+check pointing
+epoch 1:2599 loss 0.600214958190918
+tensor(155.3053, device='cuda:0', grad_fn=<AddBackward0>)
+check pointing
+epoch 1:2699 loss 1.5766258239746094
+tensor(148.2471, device='cuda:0', grad_fn=<AddBackward0>)
+check pointing
+epoch 1:2799 loss 3.5450619757175446
+tensor(14.2341, device='cuda:0', grad_fn=<AddBackward0>)
+check pointing
+epoch 1:2899 loss 1.6103551387786865
+tensor(80.0469, device='cuda:0', grad_fn=<AddBackward0>)
+check pointing
+epoch 1:2999 loss 0.22996902465820312
+tensor(117.5905, device='cuda:0', grad_fn=<AddBackward0>)
+check pointing
+epoch 1:3099 loss 2.035873606801033
+tensor(85.6675, device='cuda:0', grad_fn=<AddBackward0>)
+check pointing
+epoch 1:3199 loss 2.6392233967781067
+tensor(20.4400, device='cuda:0', grad_fn=<AddBackward0>)
+check pointing
+epoch 1:3299 loss 0.5366921424865723
+tensor(7.2441, device='cuda:0', grad_fn=<AddBackward0>)
+check pointing
+epoch 1:3399 loss 0.9796658754348755
+tensor(48.1152, device='cuda:0', grad_fn=<AddBackward0>)
+check pointing
+epoch 1:3499 loss 1.0488409399986267
+tensor(72.9680, device='cuda:0', grad_fn=<AddBackward0>)
+check pointing
+epoch 1:3599 loss 0.35062384605407715
+tensor(72.1640, device='cuda:0', grad_fn=<AddBackward0>)
+check pointing
+epoch 1:3699 loss 0.34692680835723877
+tensor(12.5688, device='cuda:0', grad_fn=<AddBackward0>)
+check pointing
+epoch 1:3799 loss 0.7430580854415894
+tensor(89.2882, device='cuda:0', grad_fn=<AddBackward0>)
+check pointing
+epoch 1:3899 loss 1.1859021186828613
+tensor(138.0348, device='cuda:0', grad_fn=<AddBackward0>)
+check pointing
+epoch 1:3999 loss 0.37458133697509766
+tensor(85.5276, device='cuda:0', grad_fn=<AddBackward0>)
+check pointing
+epoch 1:4099 loss 0.038064002990722656
+tensor(92.9431, device='cuda:0', grad_fn=<AddBackward0>)
+check pointing
+epoch 1:4199 loss 0.2771730422973633
+tensor(95.4206, device='cuda:0', grad_fn=<AddBackward0>)
+check pointing
+epoch 1:4299 loss 0.32971668243408203
+tensor(69.5446, device='cuda:0', grad_fn=<AddBackward0>)
+check pointing
+epoch 1:4399 loss 0.5854434967041016
+tensor(159.3026, device='cuda:0', grad_fn=<AddBackward0>)
+check pointing
+epoch 1:4499 loss 0.09630680084228516
+tensor(70.1924, device='cuda:0', grad_fn=<AddBackward0>)
+check pointing
+epoch 1:4599 loss 1.7047823667526245
+tensor(46.7692, device='cuda:0', grad_fn=<AddBackward0>)
+check pointing
+epoch 1:4699 loss 1.181810975074768
+tensor(92.8644, device='cuda:0', grad_fn=<AddBackward0>)
+check pointing
+epoch 1:4799 loss 0.5250139236450195
+tensor(80.9205, device='cuda:0', grad_fn=<AddBackward0>)
+check pointing
+epoch 1:4899 loss 1.7073343396186829
+tensor(16.4246, device='cuda:0', grad_fn=<AddBackward0>)
+check pointing
+epoch 1:4999 loss 2.33054119348526
+tensor(53.9394, device='cuda:0', grad_fn=<AddBackward0>)
+check pointing
+epoch 1:5099 loss 9.600710391998291
+tensor(220.6272, device='cuda:0', grad_fn=<AddBackward0>)
+check pointing
+epoch 1:5199 loss 2.246847152709961
+tensor(101.0931, device='cuda:0', grad_fn=<AddBackward0>)
+check pointing
+epoch 1:5299 loss 3.3822216987609863
+tensor(44.4632, device='cuda:0', grad_fn=<AddBackward0>)
+check pointing
+epoch 1:5399 loss 7.247428894042969
+tensor(51.1534, device='cuda:0', grad_fn=<AddBackward0>)
+check pointing
+epoch 1:5499 loss 0.4797351062297821
+tensor(17.4845, device='cuda:0', grad_fn=<AddBackward0>)
+check pointing
+epoch 1:5599 loss 0.17738473415374756
+tensor(37.5325, device='cuda:0', grad_fn=<AddBackward0>)
+check pointing
+epoch 1:5699 loss 0.17360925674438477
+tensor(9.0035, device='cuda:0', grad_fn=<AddBackward0>)
+check pointing
+epoch 1:5799 loss 1.343540370464325
+tensor(34.0675, device='cuda:0', grad_fn=<AddBackward0>)
+check pointing
+epoch 1:5899 loss 3.4375849962234497
+tensor(57.2470, device='cuda:0', grad_fn=<AddBackward0>)
+check pointing
+epoch 1:5999 loss 0.9087915420532227
+tensor(17.7127, device='cuda:0', grad_fn=<AddBackward0>)
+check pointing
+epoch 2:99 loss 0.385112464427948
+tensor(39.8341, device='cuda:0', grad_fn=<AddBackward0>)
+check pointing
+epoch 2:199 loss 0.8992325998842716
+tensor(43.1787, device='cuda:0', grad_fn=<AddBackward0>)
+check pointing
+epoch 2:299 loss 0.5283868312835693
+tensor(28.8122, device='cuda:0', grad_fn=<AddBackward0>)
+check pointing
+epoch 2:399 loss 0.3406103849411011
+tensor(126.7299, device='cuda:0', grad_fn=<AddBackward0>)
+check pointing
+epoch 2:499 loss 0.7999231815338135
+tensor(25.8526, device='cuda:0', grad_fn=<AddBackward0>)
+check pointing
+epoch 2:599 loss 0.11442220211029053
+tensor(77.3399, device='cuda:0', grad_fn=<AddBackward0>)
+check pointing
+epoch 2:699 loss 0.27148962020874023
+tensor(9.1755, device='cuda:0', grad_fn=<AddBackward0>)
+check pointing
+epoch 2:799 loss 2.697748899459839
+tensor(58.4114, device='cuda:0', grad_fn=<AddBackward0>)
+check pointing
+epoch 2:899 loss 0.0867300033569336
+tensor(49.4170, device='cuda:0', grad_fn=<AddBackward0>)
+check pointing
+epoch 2:999 loss 0.6125302910804749
+tensor(37.5773, device='cuda:0', grad_fn=<AddBackward0>)
+check pointing
+epoch 2:1099 loss 0.7856870293617249
+tensor(146.2790, device='cuda:0', grad_fn=<AddBackward0>)
+check pointing
+epoch 2:1199 loss 2.1744418144226074
+tensor(68.2761, device='cuda:0', grad_fn=<AddBackward0>)
+check pointing
+epoch 2:1299 loss 2.847776412963867
+tensor(18.6578, device='cuda:0', grad_fn=<AddBackward0>)
+check pointing
+epoch 2:1399 loss 1.017382025718689
+tensor(63.0272, device='cuda:0', grad_fn=<AddBackward0>)
+check pointing
+epoch 2:1499 loss 0.6606254577636719
+tensor(58.3225, device='cuda:0', grad_fn=<AddBackward0>)
+check pointing
+epoch 2:1599 loss 0.7921662330627441
+tensor(108.1017, device='cuda:0', grad_fn=<AddBackward0>)
+check pointing
+epoch 2:1699 loss 0.672637939453125
+tensor(125.4380, device='cuda:0', grad_fn=<AddBackward0>)
+check pointing
+epoch 2:1799 loss 0.016963958740234375
+tensor(132.2559, device='cuda:0', grad_fn=<AddBackward0>)
+check pointing
+epoch 2:1899 loss 0.09662818908691406
+tensor(153.1437, device='cuda:0', grad_fn=<AddBackward0>)
+check pointing
+epoch 2:1999 loss 0.17815113067626953
+tensor(112.3354, device='cuda:0', grad_fn=<AddBackward0>)
+check pointing
+epoch 2:2099 loss 1.1109447479248047
+tensor(89.2519, device='cuda:0', grad_fn=<AddBackward0>)
+check pointing
+epoch 2:2199 loss 0.6418333053588867
+tensor(73.2506, device='cuda:0', grad_fn=<AddBackward0>)
+check pointing
+epoch 2:2299 loss 9.255887307226658
+tensor(41.8036, device='cuda:0', grad_fn=<AddBackward0>)
+check pointing
+epoch 2:2399 loss 1.4272184371948242
+tensor(127.0107, device='cuda:0', grad_fn=<AddBackward0>)
+check pointing
+epoch 2:2499 loss 8.402234077453613
+tensor(85.9858, device='cuda:0', grad_fn=<AddBackward0>)
+check pointing
+epoch 2:2599 loss 0.18117225170135498
+tensor(25.0540, device='cuda:0', grad_fn=<AddBackward0>)
+check pointing
+epoch 2:2699 loss 0.3858034610748291
+tensor(8.6360, device='cuda:0', grad_fn=<AddBackward0>)
+check pointing
+epoch 2:2799 loss 0.057374000549316406
+tensor(57.4168, device='cuda:0', grad_fn=<AddBackward0>)
+check pointing
+epoch 2:2899 loss 0.18508100509643555
+tensor(107.1226, device='cuda:0', grad_fn=<AddBackward0>)
+check pointing
+epoch 2:2999 loss 0.5059752464294434
+tensor(34.6994, device='cuda:0', grad_fn=<AddBackward0>)
+check pointing
+epoch 2:3099 loss 1.511364459991455
+tensor(69.6499, device='cuda:0', grad_fn=<AddBackward0>)
+check pointing
+epoch 2:3199 loss 1.7800068855285645
+tensor(22.6519, device='cuda:0', grad_fn=<AddBackward0>)
+check pointing
+epoch 2:3299 loss 0.49086421728134155
+tensor(45.9417, device='cuda:0', grad_fn=<AddBackward0>)
+check pointing
+epoch 2:3399 loss 0.21118927001953125
+tensor(57.0243, device='cuda:0', grad_fn=<AddBackward0>)
+check pointing
+epoch 2:3499 loss 0.3886157274246216
+tensor(26.2877, device='cuda:0', grad_fn=<AddBackward0>)
+check pointing
+epoch 2:3599 loss 0.26844000816345215
+tensor(142.3094, device='cuda:0', grad_fn=<AddBackward0>)
+check pointing
+epoch 2:3699 loss 0.10503435134887695
+tensor(52.8339, device='cuda:0', grad_fn=<AddBackward0>)
+check pointing
+epoch 2:3799 loss 2.188753068447113
+tensor(61.8805, device='cuda:0', grad_fn=<AddBackward0>)
+check pointing
+epoch 2:3899 loss 0.2905083894729614
+tensor(74.8278, device='cuda:0', grad_fn=<AddBackward0>)
+check pointing
+epoch 2:3999 loss 2.0213849544525146
+tensor(74.7511, device='cuda:0', grad_fn=<AddBackward0>)
+check pointing
+epoch 2:4099 loss 0.1868748664855957
+tensor(100.4067, device='cuda:0', grad_fn=<AddBackward0>)
+check pointing
+epoch 2:4199 loss 1.8066182136535645
+tensor(60.8470, device='cuda:0', grad_fn=<AddBackward0>)
+check pointing
+epoch 2:4299 loss 0.28747129440307617
+tensor(53.3367, device='cuda:0', grad_fn=<AddBackward0>)
+check pointing
+epoch 2:4399 loss 0.011570930480957031
+tensor(72.9471, device='cuda:0', grad_fn=<AddBackward0>)
+check pointing
+epoch 2:4499 loss 0.1567322015762329
+tensor(70.7230, device='cuda:0', grad_fn=<AddBackward0>)
+check pointing
+epoch 2:4599 loss 1.1226043701171875
+tensor(83.6889, device='cuda:0', grad_fn=<AddBackward0>)
+check pointing
+epoch 2:4699 loss 3.348565213382244
+tensor(67.0589, device='cuda:0', grad_fn=<AddBackward0>)
+check pointing
+epoch 2:4799 loss 0.6407493352890015
+tensor(53.8918, device='cuda:0', grad_fn=<AddBackward0>)
+check pointing
+epoch 2:4899 loss 0.6269502639770508
+tensor(38.6021, device='cuda:0', grad_fn=<AddBackward0>)
+check pointing
+epoch 2:4999 loss 0.06583511829376221
+tensor(82.2192, device='cuda:0', grad_fn=<AddBackward0>)
+check pointing
+epoch 2:5099 loss 0.5115456581115723
+tensor(80.7552, device='cuda:0', grad_fn=<AddBackward0>)
+check pointing
+epoch 2:5199 loss 0.018805503845214844
+tensor(158.3056, device='cuda:0', grad_fn=<AddBackward0>)
+check pointing
+epoch 2:5299 loss 0.10522747039794922
+tensor(139.4810, device='cuda:0', grad_fn=<AddBackward0>)
+check pointing
+epoch 2:5399 loss 0.30527710914611816
+tensor(98.4541, device='cuda:0', grad_fn=<AddBackward0>)
+check pointing
+epoch 2:5499 loss 2.6538054943084717
+tensor(72.0511, device='cuda:0', grad_fn=<AddBackward0>)
+check pointing
+epoch 2:5599 loss 0.663090705871582
+tensor(75.5784, device='cuda:0', grad_fn=<AddBackward0>)
+check pointing
+epoch 2:5699 loss 2.050053119659424
+tensor(30.4318, device='cuda:0', grad_fn=<AddBackward0>)
+check pointing
+epoch 2:5799 loss 0.010990619659423828
+tensor(50.5299, device='cuda:0', grad_fn=<AddBackward0>)
+check pointing
+epoch 2:5899 loss 0.5808616876602173
+tensor(46.9561, device='cuda:0', grad_fn=<AddBackward0>)
+check pointing
+epoch 2:5999 loss 0.27431678771972656
+tensor(114.7914, device='cuda:0', grad_fn=<AddBackward0>)
+check pointing
+epoch 3:99 loss 0.07318687438964844
+tensor(99.9037, device='cuda:0', grad_fn=<AddBackward0>)
+check pointing
+epoch 3:199 loss 0.9884519577026367
+tensor(89.3710, device='cuda:0', grad_fn=<AddBackward0>)
+check pointing
+epoch 3:299 loss 0.26285409927368164
+tensor(129.3225, device='cuda:0', grad_fn=<AddBackward0>)
+check pointing
+epoch 3:399 loss 1.978118896484375
+tensor(267.1130, device='cuda:0', grad_fn=<AddBackward0>)
+check pointing
+epoch 3:499 loss 5.701601028442383
+tensor(168.1341, device='cuda:0', grad_fn=<AddBackward0>)
+check pointing
+epoch 3:599 loss 0.26927947998046875
+tensor(170.8440, device='cuda:0', grad_fn=<AddBackward0>)
+check pointing
+epoch 3:699 loss 0.026760101318359375
+tensor(150.1970, device='cuda:0', grad_fn=<AddBackward0>)
+check pointing
+epoch 3:799 loss 0.05732154846191406
+tensor(192.4021, device='cuda:0', grad_fn=<AddBackward0>)
+check pointing
+epoch 3:899 loss 0.3074226379394531
+tensor(126.7252, device='cuda:0', grad_fn=<AddBackward0>)
+check pointing
+epoch 3:999 loss 0.20331764221191406
+tensor(182.2113, device='cuda:0', grad_fn=<AddBackward0>)
+check pointing
+epoch 3:1099 loss 0.5712699890136719
+tensor(163.2157, device='cuda:0', grad_fn=<AddBackward0>)
+check pointing
+epoch 3:1199 loss 2.4686758518218994
+tensor(18.3166, device='cuda:0', grad_fn=<AddBackward0>)
+check pointing
+epoch 3:1299 loss 1.7151957750320435
+tensor(21.2317, device='cuda:0', grad_fn=<AddBackward0>)
+check pointing
+epoch 3:1399 loss 10.240032196044922
+tensor(148.8912, device='cuda:0', grad_fn=<AddBackward0>)
+check pointing
+epoch 3:1499 loss 0.6542148590087891
+tensor(134.0771, device='cuda:0', grad_fn=<AddBackward0>)
+check pointing
+epoch 3:1599 loss 0.06951332092285156
+tensor(130.2943, device='cuda:0', grad_fn=<AddBackward0>)
+check pointing
+epoch 3:1699 loss 0.4179811477661133
+tensor(56.2421, device='cuda:0', grad_fn=<AddBackward0>)
+check pointing
+epoch 3:1799 loss 0.11438655853271484
+tensor(62.4760, device='cuda:0', grad_fn=<AddBackward0>)
+check pointing
+epoch 3:1899 loss 4.08479118347168
+tensor(165.8847, device='cuda:0', grad_fn=<AddBackward0>)
+check pointing
+epoch 3:1999 loss 0.6108283996582031
+tensor(32.2803, device='cuda:0', grad_fn=<AddBackward0>)
+check pointing
+epoch 3:2099 loss 0.8798131793737411
+tensor(77.2987, device='cuda:0', grad_fn=<AddBackward0>)
+check pointing
+epoch 3:2199 loss 0.5888792388141155
+tensor(36.9598, device='cuda:0', grad_fn=<AddBackward0>)
+check pointing
+epoch 3:2299 loss 1.0626565217971802
+tensor(33.0681, device='cuda:0', grad_fn=<AddBackward0>)
+check pointing
+epoch 3:2399 loss 0.07220542430877686
+tensor(72.8053, device='cuda:0', grad_fn=<AddBackward0>)
+check pointing
+epoch 3:2499 loss 0.30267882347106934
+tensor(30.9612, device='cuda:0', grad_fn=<AddBackward0>)
+check pointing
+epoch 3:2599 loss 0.005979299545288086
+tensor(55.1204, device='cuda:0', grad_fn=<AddBackward0>)
+check pointing
+epoch 3:2699 loss 0.16092443466186523
+tensor(54.3672, device='cuda:0', grad_fn=<AddBackward0>)
+check pointing
+epoch 3:2799 loss 0.16730475425720215
+tensor(40.1360, device='cuda:0', grad_fn=<AddBackward0>)
+check pointing
+epoch 3:2899 loss 0.34290218353271484
+tensor(51.1725, device='cuda:0', grad_fn=<AddBackward0>)
+check pointing
+epoch 3:2999 loss 0.15342283248901367
+tensor(55.3095, device='cuda:0', grad_fn=<AddBackward0>)
+check pointing
+epoch 3:3099 loss 0.06082320213317871
+tensor(32.8111, device='cuda:0', grad_fn=<AddBackward0>)
+check pointing
+epoch 3:3199 loss 0.0739898681640625
+tensor(21.8578, device='cuda:0', grad_fn=<AddBackward0>)
+check pointing
+epoch 3:3299 loss 2.742812156677246
+tensor(57.5487, device='cuda:0', grad_fn=<AddBackward0>)
+check pointing
+epoch 3:3399 loss 0.5358800888061523
+tensor(40.1148, device='cuda:0', grad_fn=<AddBackward0>)
+check pointing
+epoch 3:3499 loss 0.0959925651550293
+tensor(17.3406, device='cuda:0', grad_fn=<AddBackward0>)
+check pointing
+epoch 3:3599 loss 1.033066749572754
+tensor(36.5069, device='cuda:0', grad_fn=<AddBackward0>)
+check pointing
+epoch 3:3699 loss 2.18527889251709
+tensor(24.9564, device='cuda:0', grad_fn=<AddBackward0>)
+check pointing
+epoch 3:3799 loss 0.09427666664123535
+tensor(43.9832, device='cuda:0', grad_fn=<AddBackward0>)
+check pointing
+epoch 3:3899 loss 0.6307940483093262
+tensor(14.5490, device='cuda:0', grad_fn=<AddBackward0>)
+check pointing
+epoch 3:3999 loss 0.8250656127929688
+tensor(57.2985, device='cuda:0', grad_fn=<AddBackward0>)
+check pointing
+epoch 3:4099 loss 0.14581823348999023
+tensor(49.7334, device='cuda:0', grad_fn=<AddBackward0>)
+check pointing
+epoch 3:4199 loss 0.445639967918396
+tensor(24.8896, device='cuda:0', grad_fn=<AddBackward0>)
+check pointing
+epoch 3:4299 loss 0.5233229547739029
+tensor(60.3598, device='cuda:0', grad_fn=<AddBackward0>)
+check pointing
+epoch 3:4399 loss 0.06546521186828613
+tensor(38.3675, device='cuda:0', grad_fn=<AddBackward0>)
+check pointing
+epoch 3:4499 loss 1.2131316661834717
+tensor(37.4894, device='cuda:0', grad_fn=<AddBackward0>)
+check pointing
+epoch 3:4599 loss 0.4788703918457031
+tensor(34.7424, device='cuda:0', grad_fn=<AddBackward0>)
+check pointing
+epoch 3:4699 loss 0.16445088386535645
+tensor(64.0148, device='cuda:0', grad_fn=<AddBackward0>)
+check pointing
+epoch 3:4799 loss 1.4772475957870483
+tensor(15.6077, device='cuda:0', grad_fn=<AddBackward0>)
+check pointing
+epoch 3:4899 loss 0.635775089263916
+tensor(111.5589, device='cuda:0', grad_fn=<AddBackward0>)
+check pointing
+epoch 3:4999 loss 0.4999656677246094
+tensor(192.3343, device='cuda:0', grad_fn=<AddBackward0>)
+check pointing
+epoch 3:5099 loss 0.11587905883789062
+tensor(131.1772, device='cuda:0', grad_fn=<AddBackward0>)
+check pointing
+epoch 3:5199 loss 0.25178050994873047
+tensor(102.8113, device='cuda:0', grad_fn=<AddBackward0>)
+check pointing
+epoch 3:5299 loss 4.107705116271973
+tensor(253.2606, device='cuda:0', grad_fn=<AddBackward0>)
+check pointing
+epoch 3:5399 loss 0.010065078735351562
+tensor(135.5206, device='cuda:0', grad_fn=<AddBackward0>)
+check pointing
+epoch 3:5499 loss 0.11271286010742188
+tensor(279.1310, device='cuda:0', grad_fn=<AddBackward0>)
+check pointing
+epoch 3:5599 loss 9.576042175292969
+tensor(401.1151, device='cuda:0', grad_fn=<AddBackward0>)
+check pointing
+epoch 3:5699 loss 5.143379211425781
+tensor(301.2012, device='cuda:0', grad_fn=<AddBackward0>)
+check pointing
+epoch 3:5799 loss 0.9756507873535156
+tensor(225.2486, device='cuda:0', grad_fn=<AddBackward0>)
+check pointing
+epoch 3:5899 loss 0.39873504638671875
+tensor(311.4875, device='cuda:0', grad_fn=<AddBackward0>)
+check pointing
+epoch 3:5999 loss 0.43073272705078125
+tensor(171.8584, device='cuda:0', grad_fn=<AddBackward0>)
+check pointing
+epoch 4:99 loss 0.7125511169433594
+tensor(136.1201, device='cuda:0', grad_fn=<AddBackward0>)
+check pointing
+epoch 4:199 loss 0.005615234375
+tensor(226.6227, device='cuda:0', grad_fn=<AddBackward0>)
+check pointing
+epoch 4:299 loss 0.09154129028320312
+tensor(295.0914, device='cuda:0', grad_fn=<AddBackward0>)
+check pointing
+epoch 4:399 loss 0.7372398376464844
+tensor(172.9444, device='cuda:0', grad_fn=<AddBackward0>)
+check pointing
+epoch 4:499 loss 0.16454315185546875
+tensor(144.2007, device='cuda:0', grad_fn=<AddBackward0>)
+check pointing
+epoch 4:599 loss 0.2062530517578125
+tensor(273.7372, device='cuda:0', grad_fn=<AddBackward0>)
+check pointing
+epoch 4:699 loss 0.4038658142089844
+tensor(181.7819, device='cuda:0', grad_fn=<AddBackward0>)
+check pointing
+epoch 4:799 loss 0.18475341796875
+tensor(180.4619, device='cuda:0', grad_fn=<AddBackward0>)
+check pointing
+epoch 4:899 loss 0.4289436340332031
+tensor(183.0848, device='cuda:0', grad_fn=<AddBackward0>)
+check pointing
+epoch 4:999 loss 0.154388427734375
+tensor(218.6122, device='cuda:0', grad_fn=<AddBackward0>)
+check pointing
+epoch 4:1099 loss 0.3191947937011719
+tensor(168.2161, device='cuda:0', grad_fn=<AddBackward0>)
+check pointing
+epoch 4:1199 loss 0.10062026977539062
+tensor(212.7899, device='cuda:0', grad_fn=<AddBackward0>)
+check pointing
+epoch 4:1299 loss 0.019344329833984375
+tensor(130.6136, device='cuda:0', grad_fn=<AddBackward0>)
+check pointing
+epoch 4:1399 loss 0.10605239868164062
+tensor(222.1879, device='cuda:0', grad_fn=<AddBackward0>)
+check pointing
+epoch 4:1499 loss 0.3123130798339844
+tensor(114.5381, device='cuda:0', grad_fn=<AddBackward0>)
+check pointing
+epoch 4:1599 loss 2.076202392578125
+tensor(175.0421, device='cuda:0', grad_fn=<AddBackward0>)
+check pointing
+epoch 4:1699 loss 1.411977767944336
+tensor(262.9128, device='cuda:0', grad_fn=<AddBackward0>)
+check pointing
+epoch 4:1799 loss 0.13834381103515625
+tensor(197.5395, device='cuda:0', grad_fn=<AddBackward0>)
+check pointing
+epoch 4:1899 loss 0.09849929809570312
+tensor(194.1253, device='cuda:0', grad_fn=<AddBackward0>)
+check pointing
+epoch 4:1999 loss 0.19292831420898438
+tensor(185.8340, device='cuda:0', grad_fn=<AddBackward0>)
+check pointing
+epoch 4:2099 loss 0.17853546142578125
+tensor(114.8372, device='cuda:0', grad_fn=<AddBackward0>)
+check pointing
+epoch 4:2199 loss 0.17462158203125
+tensor(170.3150, device='cuda:0', grad_fn=<AddBackward0>)
+check pointing
+epoch 4:2299 loss 0.9881019592285156
+tensor(131.9016, device='cuda:0', grad_fn=<AddBackward0>)
+check pointing
+epoch 4:2399 loss 0.5486984252929688
+tensor(157.7961, device='cuda:0', grad_fn=<AddBackward0>)
+check pointing
+epoch 4:2499 loss 0.2774810791015625
+tensor(239.8844, device='cuda:0', grad_fn=<AddBackward0>)
+check pointing
+epoch 4:2599 loss 1.3847122192382812
+tensor(245.1124, device='cuda:0', grad_fn=<AddBackward0>)
+check pointing
+epoch 4:2699 loss 0.0840911865234375
+tensor(166.2054, device='cuda:0', grad_fn=<AddBackward0>)
+check pointing
+epoch 4:2799 loss 0.022100448608398438
+tensor(95.5062, device='cuda:0', grad_fn=<AddBackward0>)
+check pointing
+epoch 4:2899 loss 0.17280864715576172
+tensor(124.9639, device='cuda:0', grad_fn=<AddBackward0>)
+check pointing
+epoch 4:2999 loss 0.024280548095703125
+tensor(93.9610, device='cuda:0', grad_fn=<AddBackward0>)
+check pointing
+epoch 4:3099 loss 0.0395050048828125
+tensor(117.4476, device='cuda:0', grad_fn=<AddBackward0>)
+check pointing
+epoch 4:3199 loss 0.9564266204833984
+tensor(96.3045, device='cuda:0', grad_fn=<AddBackward0>)
+check pointing
+epoch 4:3299 loss 1.1098861694335938
+tensor(73.9022, device='cuda:0', grad_fn=<AddBackward0>)
+check pointing
+epoch 4:3399 loss 0.7262802124023438
+tensor(170.3674, device='cuda:0', grad_fn=<AddBackward0>)
+check pointing
+epoch 4:3499 loss 0.15791702270507812
+tensor(138.1968, device='cuda:0', grad_fn=<AddBackward0>)
+check pointing
+epoch 4:3599 loss 0.9275150299072266
+tensor(146.7606, device='cuda:0', grad_fn=<AddBackward0>)
+check pointing
+epoch 4:3699 loss 0.06396102905273438
+tensor(186.4616, device='cuda:0', grad_fn=<AddBackward0>)
+check pointing
+epoch 4:3799 loss 0.802001953125
+tensor(222.0267, device='cuda:0', grad_fn=<AddBackward0>)
+check pointing
+epoch 4:3899 loss 0.2839503288269043
+tensor(45.1849, device='cuda:0', grad_fn=<AddBackward0>)
+check pointing
+epoch 4:3999 loss 0.9432144165039062
+tensor(210.6180, device='cuda:0', grad_fn=<AddBackward0>)
+check pointing
+epoch 4:4099 loss 1.6772384643554688
+tensor(255.7165, device='cuda:0', grad_fn=<AddBackward0>)
+check pointing
+epoch 4:4199 loss 0.0089111328125
+tensor(254.7966, device='cuda:0', grad_fn=<AddBackward0>)
+check pointing
+epoch 4:4299 loss 0.03981781005859375
+tensor(196.7409, device='cuda:0', grad_fn=<AddBackward0>)
+check pointing
+epoch 4:4399 loss 0.131134033203125
+tensor(115.7941, device='cuda:0', grad_fn=<AddBackward0>)
+check pointing
+epoch 4:4499 loss 0.0027418136596679688
+tensor(201.5475, device='cuda:0', grad_fn=<AddBackward0>)
+check pointing
+epoch 4:4599 loss 0.01235198974609375
+tensor(179.9318, device='cuda:0', grad_fn=<AddBackward0>)
+check pointing
+epoch 4:4699 loss 0.008769989013671875
+tensor(192.8581, device='cuda:0', grad_fn=<AddBackward0>)
+check pointing
+epoch 4:4799 loss 2.7254981994628906
+tensor(140.5159, device='cuda:0', grad_fn=<AddBackward0>)
+check pointing
+epoch 4:4899 loss 0.1696319580078125
+tensor(285.5936, device='cuda:0', grad_fn=<AddBackward0>)
+check pointing
+epoch 4:4999 loss 1.3045425415039062
+tensor(147.0824, device='cuda:0', grad_fn=<AddBackward0>)
+check pointing
+epoch 4:5099 loss 0.471880704164505
+tensor(28.5344, device='cuda:0', grad_fn=<AddBackward0>)
+check pointing
+epoch 4:5199 loss 5.6897971630096436
+tensor(137.1665, device='cuda:0', grad_fn=<AddBackward0>)
+check pointing
+epoch 4:5299 loss 3.2968292236328125
+tensor(162.8085, device='cuda:0', grad_fn=<AddBackward0>)
+check pointing
+epoch 4:5399 loss 2.5294723510742188
+tensor(191.4033, device='cuda:0', grad_fn=<AddBackward0>)
+check pointing
+epoch 4:5499 loss 0.14249420166015625
+tensor(382.0878, device='cuda:0', grad_fn=<AddBackward0>)
+check pointing
+epoch 4:5599 loss 0.21976089477539062
+tensor(196.1374, device='cuda:0', grad_fn=<AddBackward0>)
+check pointing
+epoch 4:5699 loss 0.051807403564453125
+tensor(207.1467, device='cuda:0', grad_fn=<AddBackward0>)
+check pointing
+epoch 4:5799 loss 0.44878387451171875
+tensor(230.9562, device='cuda:0', grad_fn=<AddBackward0>)
+check pointing
+epoch 4:5899 loss 0.2157135009765625
+tensor(163.3936, device='cuda:0', grad_fn=<AddBackward0>)
+check pointing
+epoch 4:5999 loss 0.4108924865722656
+tensor(297.3124, device='cuda:0', grad_fn=<AddBackward0>)
+check pointing
+finished training
+0 -582.4949912130833 0.0
+1 -1070.7392283976078 3.0
+2 -1863.1217345297337 8.0
+3 -1570.3026880323887 8.0
+4 -1831.6082245409489 10.0
+5 -2133.0532924234867 14.0
+6 -2288.871956259012 16.0
+7 -2276.342162400484 17.0
+8 -2394.648599654436 19.0
+9 -2134.844007283449 20.0
+10 -2069.883690625429 21.0
+11 -1998.7979108393192 23.0
+accuracy 0.9978333333333333
