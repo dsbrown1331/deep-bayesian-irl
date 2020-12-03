@@ -27,14 +27,14 @@ print(np.sum(likelihood == -float('inf')))
 W = W[likelihood != -float('inf')]
 #print(np.mean(W, axis=0))
 eval_policies = ['00025', '00325', '00800', '01450', 'mean', 'map', 'no-op']
-name_transform = {'00025':'A', '00325':'B', '00800':'C', '01450':'D', 'mean':'Mean', 'map':'MAP', 'no-op': 'NoOp'}
+name_transform = {'00025':'A', '00325':'B', '00800':'C', '01450':'D', 'mean':'Mean', 'map':'MAP', 'no-op': 'No-Op'}
 if args.env_name == "enduro":
     eval_policies =['03125', '03425', '03900', '04875', 'mean', 'map', 'no-op']
     name_transform = {'03125':'A', '03425':'B', '03900':'C', '04875':'D', 'mean':'Mean', 'map':'MAP', 'no-op': 'No-Op'}
 gt_return_list = []
 fcount_list = []
 return_dist_list = []
-print(" policy & mean & " + str(args.alpha) + "-VaR  & gt & min gt & Length \\\\ \hline")
+print(" policy & mean & " + str(args.alpha) + "-VaR  & gt & Length \\\\ \hline")
 for eval in eval_policies:
     #print("-"*20)
     #print("eval", eval)
@@ -42,7 +42,7 @@ for eval in eval_policies:
     return_dist = np.dot(W,fcounts)
     #print(return_dist[:200])
     #input()
-    print("{} & {:.1f} & {:.1f}  & {:.1f} & {:.0f} & {:.1f}  \\\\".format(name_transform[eval], np.mean(return_dist), helper.worst_percentile(return_dist, args.alpha), np.mean(returns), np.min(returns), np.mean(lengths)))
+    print("{} & {:.1f} & {:.1f}  & {:.1f} & {:.1f}  \\\\".format(name_transform[eval], np.mean(return_dist), helper.worst_percentile(return_dist, args.alpha), np.mean(returns), np.mean(lengths)))
 
 
 

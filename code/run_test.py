@@ -55,7 +55,7 @@ if __name__ == '__main__':
     parser.add_argument('--env_id', default='', help='Select the environment to run')
     parser.add_argument('--env_type', default='', help='mujoco or atari')
     parser.add_argument('--model_path', default='')
-    parser.add_argument('--episode_count', default=100)
+    parser.add_argument('--episode_count', default=1)
     parser.add_argument('--record_video', action='store_true')
     parser.add_argument('--render', action='store_true')
     parser.add_argument('--seed', default = 1234, type=int)
@@ -110,10 +110,12 @@ if __name__ == '__main__':
     print(env_test.unwrapped.get_action_meanings())
 
     for i in range(int(episode_count)):
+
         ob = env.reset()
         steps = 0
         acc_reward = 0
-        while steps < 7000:
+        while True: #steps < 7000:
+            print(steps)
             if args.no_op:
                 action = 0
             else:
@@ -128,6 +130,8 @@ if __name__ == '__main__':
             if done:
                 print(steps,acc_reward)
                 break
+        if steps == 7000:
+            print(steps,acc_reward)
 
     env.close()
     env.venv.close()
